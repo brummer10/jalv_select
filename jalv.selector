@@ -1,0 +1,152 @@
+#!/usr/bin/python
+
+import sys, os, gtk, subprocess, argparse, re
+
+class LV2PlugList(gtk.Window):
+    # parse cmd line
+    def parse_cmd(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-g","--grep", type=str, 
+                            help="select plugins by grep arg")
+        args = parser.parse_args()
+        if args.grep:
+            self.arg = args.grep
+        else:
+            self.arg = 'h'
+    # combobox set text
+    def set_cb(self, cb):
+        cb.append_text('jalv.gtk')
+        cb.append_text('jalv.qt')
+        cb.append_text('jalv.gtk3')
+        cb.append_text('jalv.gtkmm')
+        cb.append_text('jalv')
+        cb.set_active(0)
+    # color for the rows
+    def set_list_color(self):
+        gtk.rc_parse_string( """
+        style "gx-treestyle"{
+            GtkTreeView::odd-row-color = "#EEEEEE"
+            GtkTreeView::even-row-color = "#FFFFFF"
+            GtkTreeView::allow-rules = 1
+        }
+        widget "*lv2treeview*" style "gx-treestyle"
+        """)
+    # set selected jalv interpreter
+    def on_changed(self, widget):
+        self.proc = widget.get_active_text()
+    # set and run selected plugin with selected jalv interpreter
+    def onSelectionChanged(self, tree_selection) :
+        (model, pathlist) = tree_selection.get_selected_rows()
+        for path in pathlist :
+            tree_iter = model.get_iter(path)
+            plug = model.get_value(tree_iter,0)
+            subprocess.Popen('%s  %s' % (self.proc, plug) , shell=True)
+        #tree_selection.unselect_all()
+    # create lv2 plugin list 
+    def get_list(self,pluglist, arg):
+        p = subprocess.Popen('lv2ls | grep %s' % arg, shell=True, 
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for line in p.stdout.readlines():
+            line = line.replace('\n','')
+            pluglist.append(line)
+    # fill liste into treeview
+    def fill_liststore(self):
+        # get plugin list by lv2ls
+        pluglist = []
+        self.get_list(pluglist,self.arg)
+        # fill plugin liststore
+        for plug in pluglist:
+            self.liststore.append([plug])
+        self.treeview.append_column(self.column)
+    # reload pressed
+    def on_reload(self, widget):
+        self.liststore.clear()
+        self.treeview.remove_column(self.column)
+        self.fill_liststore()
+    def fillfull_liststore(self):
+        # get plugin list by lv2ls
+        pluglist = []
+        self.get_list(pluglist,'h')
+        # fill plugin liststore
+        for plug in pluglist:
+            self.liststore.append([plug])
+        self.treeview.append_column(self.column)
+    # reload pressed
+    def on_rescan(self, widget):
+        self.liststore.clear()
+        self.treeview.remove_column(self.column)
+        self.fillfull_liststore()
+    # check first list fill with regex
+    def check_regex(self):
+        CHECK_RE = re.compile('[.a-zA-Z0-9_-]+$')
+        if  CHECK_RE.match(self.arg):
+            self.fill_liststore()
+        else:
+            print "only chars allowed in regex!"
+            self.arg = 'h'
+            self.fillfull_liststore()
+    # exit pressed
+    def on_exit(self, widget):
+        self.destroy()
+    # init LV2PlugList
+    def __init__(self):
+        # parse arguments if given
+        self.parse_cmd()
+        super(LV2PlugList, self).__init__()
+        self.set_default_size(550, 200)
+        self.set_border_width(10)
+        self.connect("destroy", lambda w: gtk.main_quit())
+        self.set_title("LV2 Plugins")
+        try:
+            script_dir = sys.path[0]
+            img_path = os.path.join(script_dir, 'lv2.png')
+            self.set_icon_from_file(img_path)
+        except: 
+            pass
+        # init liststore
+        self.liststore = gtk.ListStore(str)
+        self.treeview = gtk.TreeView(self.liststore)
+        tree_selection = self.treeview.get_selection()
+        tree_selection.set_mode(gtk.SELECTION_SINGLE)
+        self.set_list_color()
+        self.treeview.set_name("lv2treeview" )
+        self.treeview.set_rules_hint( True )
+        cell = gtk.CellRendererText()
+        self.column = gtk.TreeViewColumn("Select LV2 Plug")
+        self.column.pack_start(cell, False)
+        self.column.add_attribute(cell, "text", 0)
+        # fill plugin list and connect change handler
+        self.check_regex()
+        tree_selection.connect("changed", self.onSelectionChanged)
+        # combo box to select jalv interpreter
+        proc = []
+        cb = gtk.combo_box_new_text()
+        cb.connect("changed", self.on_changed)
+        self.set_cb(cb)
+        # reload button
+        r = gtk.Button("reload")
+        r.connect("clicked", self.on_reload)
+        # rescan button
+        s = gtk.Button("rescan")
+        s.connect("clicked", self.on_rescan)
+        # exit button
+        b = gtk.Button("exit")
+        b.connect("clicked", self.on_exit)
+        # put all together
+        vbox = gtk.VBox(False, 10)
+        hbox = gtk.HBox(False, 8)
+        sw = gtk.ScrolledWindow()
+        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add(self.treeview)
+        vbox.pack_start(sw, True, True, 0)
+        vbox.pack_start(hbox, False, False, 0)
+        hbox.pack_start(cb,False,False,20)
+        hbox.pack_end(b,False,False,10)
+        hbox.pack_end(s,False,False,0)
+        hbox.pack_end(r,False,False,0)
+        self.add(vbox)
+        self.show_all()
+# run
+LV2PlugList()
+gtk.main()
