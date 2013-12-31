@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 import sys, os, gtk, subprocess, argparse, re
+import lilv
+        
+world = lilv.World()
+world.load_all()
+
 
 class LV2PlugList(gtk.Window):
     # parse cmd line
@@ -20,6 +25,7 @@ class LV2PlugList(gtk.Window):
         cb.append_text('jalv.gtk3')
         cb.append_text('jalv.gtkmm')
         cb.append_text('jalv')
+        cb.append_text('lv2info')
         cb.set_active(0)
     # color for the rows
     def set_list_color(self):
@@ -39,52 +45,60 @@ class LV2PlugList(gtk.Window):
         (model, pathlist) = tree_selection.get_selected_rows()
         for path in pathlist :
             tree_iter = model.get_iter(path)
-            plug = model.get_value(tree_iter,0)
+            plug = model.get_value(tree_iter,2)
             subprocess.Popen('%s  %s' % (self.proc, plug) , shell=True)
         #tree_selection.unselect_all()
-    # create lv2 plugin list 
-    def get_list(self,pluglist, arg):
-        p = subprocess.Popen('lv2ls | grep %s' % arg, shell=True, 
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in p.stdout.readlines():
-            line = line.replace('\n','')
-            pluglist.append(line)
+    # create lv2 plugin list with lilv.py
+    def get_world(self):
+        for p in world.get_all_plugins():
+            name = p.get_name()
+            uri = p.get_uri()
+            self.pluglist[0].append(name)
+            self.pluglist[1].append(uri)
+        # remove <>
+        self.pluglist[1] = '*'.join(map(str, self.pluglist[1]))
+        self.pluglist[1] = self.pluglist[1].replace('<', '')
+        self.pluglist[1] = self.pluglist[1].replace('>', '')
+        self.pluglist[1] = self.pluglist[1].split('*')
     # fill liste into treeview
     def fill_liststore(self):
-        # get plugin list by lv2ls
-        pluglist = []
-        self.get_list(pluglist,self.arg)
+        self.pluglist = [[],[]]
+        # get plugin list by lilv.py
+        self.get_world()
         # fill plugin liststore
-        for plug in pluglist:
-            self.liststore.append([plug])
+        j = 0
+        for i in range(len(self.pluglist[0])):
+            if self.arg in self.pluglist[1][i] :
+                self.liststore.append([self.pluglist[0][i], j, self.pluglist[1][i]])
+                j = j+1
         self.treeview.append_column(self.column)
-    # reload pressed
-    def on_reload(self, widget):
+        
+    # enter pressed
+    def on_enter(self, widget):
+        self.arg = self.entry.get_text()
         self.liststore.clear()
         self.treeview.remove_column(self.column)
         self.fill_liststore()
     def fillfull_liststore(self):
-        # get plugin list by lv2ls
-        pluglist = []
-        self.get_list(pluglist,'h')
+        self.pluglist = [[],[]]
+        # get plugin list by lilv.py
+        self.get_world()
         # fill plugin liststore
-        for plug in pluglist:
-            self.liststore.append([plug])
+        for i in range(len(self.pluglist[0])):
+            self.liststore.append([self.pluglist[0][i], i, self.pluglist[1][i]])
         self.treeview.append_column(self.column)
     # reload pressed
-    def on_rescan(self, widget):
+    def on_reload(self, widget):
+        self.entry.set_text("")
         self.liststore.clear()
         self.treeview.remove_column(self.column)
         self.fillfull_liststore()
     # check first list fill with regex
     def check_regex(self):
-        CHECK_RE = re.compile('[.a-zA-Z0-9_-]+$')
-        if  CHECK_RE.match(self.arg):
-            self.fill_liststore()
-        else:
-            print "only chars allowed in regex!"
-            self.arg = 'h'
+        if not self.arg:
             self.fillfull_liststore()
+        else:
+            self.fill_liststore()
     # exit pressed
     def on_exit(self, widget):
         self.destroy()
@@ -93,7 +107,7 @@ class LV2PlugList(gtk.Window):
         # parse arguments if given
         self.parse_cmd()
         super(LV2PlugList, self).__init__()
-        self.set_default_size(550, 200)
+        self.set_default_size(300, 250)
         self.set_border_width(10)
         self.connect("destroy", lambda w: gtk.main_quit())
         self.set_title("LV2 Plugins")
@@ -104,7 +118,8 @@ class LV2PlugList(gtk.Window):
         except: 
             pass
         # init liststore
-        self.liststore = gtk.ListStore(str)
+        self.pluglist = [[],[]]
+        self.liststore = gtk.ListStore(str, int, str)
         self.treeview = gtk.TreeView(self.liststore)
         tree_selection = self.treeview.get_selection()
         tree_selection.set_mode(gtk.SELECTION_SINGLE)
@@ -123,12 +138,15 @@ class LV2PlugList(gtk.Window):
         cb = gtk.combo_box_new_text()
         cb.connect("changed", self.on_changed)
         self.set_cb(cb)
+        # regex self.entry
+        self.entry = gtk.Entry()
+        self.entry.set_max_length(20)
+        self.entry.connect("activate", self.on_enter)
+        self.entry.insert_text(self.arg, len(self.entry.get_text()))
+        self.entry.select_region(0, len(self.entry.get_text()))
         # reload button
-        r = gtk.Button("reload")
-        r.connect("clicked", self.on_reload)
-        # rescan button
-        s = gtk.Button("rescan")
-        s.connect("clicked", self.on_rescan)
+        s = gtk.Button("reload")
+        s.connect("clicked", self.on_reload)
         # exit button
         b = gtk.Button("exit")
         b.connect("clicked", self.on_exit)
@@ -144,7 +162,7 @@ class LV2PlugList(gtk.Window):
         hbox.pack_start(cb,False,False,20)
         hbox.pack_end(b,False,False,10)
         hbox.pack_end(s,False,False,0)
-        hbox.pack_end(r,False,False,0)
+        hbox.pack_end(self.entry, False, False, 0)
         self.add(vbox)
         self.show_all()
 # run

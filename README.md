@@ -2,4 +2,6 @@ jalv_select
 ===========
 
 little pygtk script to select lv2 plugs and run with jalv 
-![Alternativer Text](http://imageshack.com/a/img46/9789/qlct.png)
+- needs python-lilv
+- can search plugs by regex
+![Alternativer Text](http://imageshack.com/a/img844/2226/927l.png)
