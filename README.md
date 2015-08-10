@@ -1,8 +1,10 @@
-jalv_select
+jalv.select
 ===========
 
-little pygtk script to select lv2 plugs and run with jalv 
-- needs python-lilv
-- can search plugs by regex
+A little gtkmm GUI to select lv2 plugs from a list
+and run them with jalv. 
+
+- needs lilv
+- needs gtkmm-2.4
 <p><p\>
-![Alternativer Text](http://imageshack.com/a/img844/2226/927l.png)
+![Alternativer Text](http://i60.tinypic.com/tzfvn.png)
