@@ -61,6 +61,7 @@ class LV2PluginList : public Gtk::Window {
 
         treeView.set_model(listStore = Gtk::ListStore::create(cols));
         treeView.append_column("Name", cols.col_name);
+        treeView.set_rules_hint(true);
         fill_list();
 
         scrollWindow.add(treeView);
@@ -77,8 +78,8 @@ class LV2PluginList : public Gtk::Window {
         selection->signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_selection_changed) );
         buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
         newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
-        comboBox.signal_changed().connect(sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
-        textEntry.signal_changed().connect(sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
+        comboBox.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
+        textEntry.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
         show_all_children();
     }
     ~LV2PluginList() {
@@ -86,8 +87,7 @@ class LV2PluginList : public Gtk::Window {
     }
 };
 
-void LV2PluginList::fill_list()
-{
+void LV2PluginList::fill_list() {
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
@@ -102,8 +102,7 @@ void LV2PluginList::fill_list()
     }
 }
 
-void LV2PluginList::refill_list()
-{
+void LV2PluginList::refill_list() {
     Glib::ustring name;
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
@@ -119,8 +118,7 @@ void LV2PluginList::refill_list()
     }
 }
 
-void LV2PluginList::new_list()
-{
+void LV2PluginList::new_list() {
     new_world = true;
     listStore->clear();
     lilv_world_free(world);
@@ -129,38 +127,31 @@ void LV2PluginList::new_list()
     fill_list();
 }
 
-void LV2PluginList::on_entry_changed()
-{
+void LV2PluginList::on_entry_changed() {
     if(! new_world) {
-    regex = textEntry.get_text();
-    listStore->clear();
-    refill_list();
+        regex = textEntry.get_text();
+        listStore->clear();
+        refill_list();
     } else {
         new_world = false;
     }
 }
 
-void LV2PluginList::on_combo_changed()
-{
+void LV2PluginList::on_combo_changed() {
     interpret = comboBox.get_entry()->get_text();
 }
 
-void LV2PluginList::on_selection_changed()
-{
+void LV2PluginList::on_selection_changed() {
     Gtk::TreeModel::iterator iter = selection->get_selected();
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring n = row[cols.col_name];
-        Glib::ustring id = interpret;
-        id += row[cols.col_id];
-        id += " & " ;
+        Glib::ustring id = interpret + row[cols.col_id] + " & " ;
         if (system(NULL)) system( id.c_str());
         selection->unselect(*iter);
     }       
 }
 
-void LV2PluginList::on_button_quit()
-{
+void LV2PluginList::on_button_quit() {
     Gtk::Main::quit();
 }
 
