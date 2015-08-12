@@ -8,11 +8,13 @@ class LV2PluginList : public Gtk::Window {
         Columns() {
             add(col_id);
             add(col_name);
+            add(col_tip);
         }
         ~Columns() {}
    
         Gtk::TreeModelColumn<Glib::ustring> col_id;
         Gtk::TreeModelColumn<Glib::ustring> col_name;
+        Gtk::TreeModelColumn<Glib::ustring> col_tip;
     };
     Columns cols;
 
@@ -57,10 +59,12 @@ class LV2PluginList : public Gtk::Window {
         comboBox.append_text("jalv.qt ");
         comboBox.append_text("jalv ");
         comboBox.set_active(0);
+        comboBox.set_size_request(120,-1);
         interpret = "jalv.gtk ";
 
         treeView.set_model(listStore = Gtk::ListStore::create(cols));
         treeView.append_column("Name", cols.col_name);
+        treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
         fill_list();
 
@@ -83,11 +87,13 @@ class LV2PluginList : public Gtk::Window {
         show_all_children();
     }
     ~LV2PluginList() {
-        lilv_world_free(world);        
+        lilv_world_free(world);
     }
 };
 
 void LV2PluginList::fill_list() {
+    Glib::ustring tip;
+    Glib::ustring tipby = " \nby ";
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
@@ -99,11 +105,25 @@ void LV2PluginList::fill_list() {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
         row[cols.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
         row[cols.col_name] = lilv_node_as_string(lilv_plugin_get_name(plug));
+        const LilvPluginClass* cls = lilv_plugin_get_class(plug);
+        tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
+        
+        LilvNode* nd = lilv_plugin_get_author_name(plug);
+        if (!nd) {
+            nd = lilv_plugin_get_project(plug);
+        }
+        if (nd) {
+             tip += tipby + lilv_node_as_string(nd);
+        }
+        lilv_node_free(nd);
+        row[cols.col_tip] = tip;
     }
 }
 
 void LV2PluginList::refill_list() {
     Glib::ustring name;
+    Glib::ustring tip;
+    Glib::ustring tipby = " \nby ";
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
@@ -114,7 +134,19 @@ void LV2PluginList::refill_list() {
             row = *(listStore->append());
             row[cols.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             row[cols.col_name] = name;
-	    }
+            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
+            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
+        
+            LilvNode* nd = lilv_plugin_get_author_name(plug);
+            if (!nd) {
+                nd = lilv_plugin_get_project(plug);
+            }
+            if (nd) {
+                tip += tipby + lilv_node_as_string(nd);
+            }
+            lilv_node_free(nd);
+            row[cols.col_tip] = tip;
+        }
     }
 }
 
@@ -145,7 +177,7 @@ void LV2PluginList::on_selection_changed() {
     Gtk::TreeModel::iterator iter = selection->get_selected();
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring id = interpret + row[cols.col_id] + " & " ;
+        Glib::ustring id = interpret + " " + row[cols.col_id] + " & " ;
         if (system(NULL)) system( id.c_str());
         selection->unselect(*iter);
     }       
