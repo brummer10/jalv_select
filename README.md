@@ -21,4 +21,4 @@ Install:
 - make install
 
 <p><p\>
-![Alternativer Text](http://i60.tinypic.com/tzfvn.png)
+![Alternativer Text](http://i62.tinypic.com/24fagds.jpg)
