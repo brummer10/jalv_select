@@ -7,10 +7,11 @@ and run them with jalv.
 Features:
 - select jalv interpreter from combo box,
 - select LV2 plugin from list,
+- select preset to load from menu
 - search plugins by regex,
 - reload lilv world to catch new installed plugins,
 - simple and lightweight in old unix style,
-- load plugin on single click. 
+- load plugin with selected preset. 
 
 Depends:
 - lilv
@@ -19,6 +20,7 @@ Depends:
 Install:
 - make
 - make install
+- see makefile for more options, eg. build debian package
 
 <p><p\>
 ![Alternativer Text](http://i62.tinypic.com/24fagds.jpg)

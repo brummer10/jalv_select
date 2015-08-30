@@ -1,26 +1,218 @@
 #include <gtkmm.h>
+#include <giomm.h>
+#include <iostream>
+
 #include <lilv/lilv.h>
+#include "lv2/lv2plug.in/ns/ext/presets/presets.h"
+#include "lv2/lv2plug.in/ns/ext/state/state.h"
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+
+
+
+
+
+class PresetList {
+
+    class Presets : public Gtk::TreeModel::ColumnRecord {
+    public:
+        Presets() {
+            add(col_label);
+            add(col_uri);
+            add(col_plug);
+        }
+        ~Presets() {}
+   
+        Gtk::TreeModelColumn<Glib::ustring> col_label;
+        Gtk::TreeModelColumn<const char*> col_uri;
+        Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
+       
+    };
+    Presets psets;
+
+    Glib::RefPtr<Gtk::ListStore> presetStore;
+    Gtk::TreeModel::Row row ;
+    
+    int write_state_to_file(Glib::ustring state);
+    void on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world);
+    void on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id);
+    void create_preset_menu(Glib::ustring id, LilvWorld* world);
+    
+    static char** uris;
+    static size_t n_uris;
+    static const char* unmap_uri(LV2_URID_Map_Handle handle, LV2_URID urid);
+    static LV2_URID map_uri(LV2_URID_Map_Handle handle, const char* uri);
+
+    public:
+    Glib::ustring interpret;
+
+    void create_preset_list(Glib::ustring id, const LilvPlugin* plug, LilvWorld* world);
+    
+    PresetList() {
+        presetStore = Gtk::ListStore::create(psets);
+        presetStore->set_sort_column(psets.col_label, Gtk::SORT_ASCENDING); 
+    }
+
+    ~PresetList() { 
+        free(uris);
+    }
+
+};
+
+char** PresetList::uris = NULL;
+size_t PresetList::n_uris = 0;
+
+LV2_URID PresetList::map_uri(LV2_URID_Map_Handle handle, const char* uri) {
+    for (size_t i = 0; i < n_uris; ++i) {
+        if (!strcmp(uris[i], uri)) {
+            return i + 1;
+        }
+    }
+
+    uris = (char**)realloc(uris, ++n_uris * sizeof(char*));
+    uris[n_uris - 1] = const_cast<char*>(uri);
+    return n_uris;
+}
+
+const char* PresetList::unmap_uri(LV2_URID_Map_Handle handle, LV2_URID urid) {
+    if (urid > 0 && urid <= n_uris) {
+        return uris[urid - 1];
+    }
+    return NULL;
+}
+
+int PresetList::write_state_to_file(Glib::ustring state) {
+    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path("/tmp/state.ttl");
+    if (file) {
+        Glib::ustring prefix = "@prefix atom: <http://lv2plug.in/ns/ext/atom#> .\n"
+                               "@prefix lv2: <http://lv2plug.in/ns/lv2core#> .\n"
+                               "@prefix pset: <http://lv2plug.in/ns/ext/presets#> .\n"
+                               "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+                               "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
+                               "@prefix state: <http://lv2plug.in/ns/ext/state#> .\n"
+                               "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n";
+        prefix +=   state;
+        Glib::RefPtr<Gio::DataOutputStream> out = Gio::DataOutputStream::create(file->replace());
+        out->put_string(prefix);
+        return 1;
+    }
+    return 0;
+
+}
+
+void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world) {
+    Gtk::TreeModel::Row row = *iter;
+    LV2_URID_Map       map           = { NULL, map_uri };
+    LV2_URID_Unmap     unmap         = { NULL, unmap_uri };
+    LilvState* state = NULL;
+
+    LilvNodes* presets = lilv_plugin_get_related(row.get_value(psets.col_plug),
+      lilv_new_uri(world,LV2_PRESETS__Preset));
+    LILV_FOREACH(nodes, i, presets) {
+        const LilvNode* preset = lilv_nodes_get(presets, i);
+        lilv_world_load_resource(world, preset);
+        LilvNodes* labels = lilv_world_find_nodes(
+                world, preset, lilv_new_uri(world, LILV_NS_RDFS "label"), NULL);
+            if (labels) {
+                const LilvNode* label = lilv_nodes_get_first(labels);
+                const char* set =  lilv_node_as_string(label);
+                if (strcmp (set,row.get_value(psets.col_label).c_str()) == 0) {
+                    state = lilv_state_new_from_world(world, &map, preset);
+                    lilv_state_set_label(state, set);
+                    Glib::ustring st = lilv_state_to_string(world,&map,&unmap,state,row.get_value(psets.col_uri),NULL);
+                    lilv_state_free(state);
+                    st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
+                    if(!write_state_to_file(st)) return;
+                }
+                lilv_nodes_free(labels);
+            }
+   }
+   
+   //Glib::ustring pre = "'"+row.get_value(psets.col_label)+"'";
+   Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
+   if (system(NULL)) system( com.c_str());
+   presetStore->clear();
+   delete presetMenu;
+}
+
+void PresetList::on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id) {
+   Glib::ustring com = interpret + id;
+   if (system(NULL)) system( com.c_str());
+   presetStore->clear();
+   delete presetMenu;
+}
+
+void PresetList::create_preset_menu(Glib::ustring id, LilvWorld* world) {
+    Gtk::MenuItem* item;
+    Gtk::Menu *presetMenu = Gtk::manage(new Gtk::Menu());
+    item = Gtk::manage(new Gtk::MenuItem("Default", true));
+    item->signal_activate().connect(
+          sigc::bind(sigc::bind(sigc::mem_fun(
+          *this, &PresetList::on_preset_default),id),presetMenu));
+    presetMenu->append(*item);
+    Gtk::SeparatorMenuItem *hline = Gtk::manage(new Gtk::SeparatorMenuItem());
+    presetMenu->append(*hline);
+    for (Gtk::TreeModel::iterator i = presetStore->children().begin();
+                                  i != presetStore->children().end(); i++) {
+        Gtk::TreeModel::Row row = *i; 
+        item = Gtk::manage(new Gtk::MenuItem(row[psets.col_label], true));
+        item->signal_activate().connect(
+              sigc::bind(sigc::bind(sigc::bind(sigc::bind(sigc::mem_fun(
+              *this, &PresetList::on_preset_selected),world),i),id),presetMenu));
+        presetMenu->append(*item);
+            
+    }
+    presetMenu->show_all();
+    presetMenu->popup(0,gtk_get_current_event_time());
+}
+
+void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, LilvWorld* world) {
+    LilvNodes* presets = lilv_plugin_get_related(plug,
+      lilv_new_uri(world,LV2_PRESETS__Preset));
+    presetStore->clear();
+    LILV_FOREACH(nodes, i, presets) {
+        const LilvNode* preset = lilv_nodes_get(presets, i);
+        lilv_world_load_resource(world, preset);
+        LilvNodes* labels = lilv_world_find_nodes(
+          world, preset, lilv_new_uri(world, LILV_NS_RDFS "label"), NULL);
+        if (labels) {
+            const LilvNode* label = lilv_nodes_get_first(labels);
+            Glib::ustring set =  lilv_node_as_string(label);
+            row = *(presetStore->append());
+            row[psets.col_label]=set;
+            row[psets.col_uri] = lilv_node_as_uri(preset);
+            row[psets.col_plug] = plug;
+            lilv_nodes_free(labels);
+        } else {
+            fprintf(stderr, "Preset <%s> has no rdfs:label\n",
+                    lilv_node_as_string(lilv_nodes_get(presets, i)));
+        }
+    }
+    lilv_nodes_free(presets);
+    create_preset_menu(id, world);
+}
 
 class LV2PluginList : public Gtk::Window {
 
-    class Columns : public Gtk::TreeModel::ColumnRecord {
+    class PlugInfo : public Gtk::TreeModel::ColumnRecord {
     public:
-        Columns() {
+        PlugInfo() {
             add(col_id);
             add(col_name);
             add(col_tip);
+            add(col_plug);
         }
-        ~Columns() {}
+        ~PlugInfo() {}
    
         Gtk::TreeModelColumn<Glib::ustring> col_id;
         Gtk::TreeModelColumn<Glib::ustring> col_name;
         Gtk::TreeModelColumn<Glib::ustring> col_tip;
+        Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
     };
-    Columns cols;
+    PlugInfo pinfo;
 
     Gtk::VBox topBox;
     Gtk::HBox buttonBox;
-    Gtk::ComboBoxEntryText comboBox;
+    Gtk::ComboBoxText comboBox;
     Gtk::ScrolledWindow scrollWindow;
     Gtk::Button buttonQuit;
     Gtk::Button newList;
@@ -28,19 +220,20 @@ class LV2PluginList : public Gtk::Window {
     Gtk::TreeView treeView;
     Gtk::TreeModel::Row row ;
 
+    PresetList pstore;
     Glib::RefPtr<Gtk::ListStore> listStore;
     Glib::RefPtr<Gtk::TreeView::Selection> selection;
-    Glib::ustring interpret;
     Glib::ustring regex;
     bool new_world;
 
     LilvWorld* world;
     const LilvPlugins* lv2_plugins;
+    LV2_URID_Map map;
+    LV2_Feature map_feature;
     
     void fill_list();
     void refill_list();
     void new_list();
-
     virtual void on_selection_changed();
     virtual void on_combo_changed();
     virtual void on_entry_changed();
@@ -53,17 +246,16 @@ class LV2PluginList : public Gtk::Window {
         new_world(false) {
         set_title("LV2 plugs");
         set_default_size(350,200);
-        comboBox.append_text("jalv.gtk ");
-        comboBox.append_text("jalv.gtkmm ");
-        comboBox.append_text("jalv.gtk3 ");
-        comboBox.append_text("jalv.qt ");
-        comboBox.append_text("jalv ");
+        comboBox.append("jalv.gtk ");
+        comboBox.append("jalv.gtkmm ");
+        comboBox.append("jalv.gtk3 ");
+        comboBox.append("jalv.qt ");
+        //comboBox.append("jalv.extui ");
         comboBox.set_active(0);
-        comboBox.set_size_request(120,-1);
-        interpret = "jalv.gtk ";
+        pstore.interpret = "jalv.gtk ";
 
-        treeView.set_model(listStore = Gtk::ListStore::create(cols));
-        treeView.append_column("Name", cols.col_name);
+        treeView.set_model(listStore = Gtk::ListStore::create(pinfo));
+        treeView.append_column("Name", pinfo.col_name);
         treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
         fill_list();
@@ -97,18 +289,22 @@ void LV2PluginList::fill_list() {
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
+    LilvNode* nd;
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
 
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
         row = *(listStore->append());
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
-        row[cols.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
-        row[cols.col_name] = lilv_node_as_string(lilv_plugin_get_name(plug));
+        row[pinfo.col_plug] = plug;
+        row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+        nd = lilv_plugin_get_name(plug);
+        row[pinfo.col_name] = lilv_node_as_string(nd);
+        lilv_node_free(nd);
         const LilvPluginClass* cls = lilv_plugin_get_class(plug);
         tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
         
-        LilvNode* nd = lilv_plugin_get_author_name(plug);
+        nd = lilv_plugin_get_author_name(plug);
         if (!nd) {
             nd = lilv_plugin_get_project(plug);
         }
@@ -116,7 +312,7 @@ void LV2PluginList::fill_list() {
              tip += tipby + lilv_node_as_string(nd);
         }
         lilv_node_free(nd);
-        row[cols.col_tip] = tip;
+        row[pinfo.col_tip] = tip;
     }
 }
 
@@ -124,20 +320,23 @@ void LV2PluginList::refill_list() {
     Glib::ustring name;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
+    LilvNode* nd;
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
-        name = lilv_node_as_string(lilv_plugin_get_name(plug));
+        nd = lilv_plugin_get_name(plug);
+        name = lilv_node_as_string(nd);
+        lilv_node_free(nd);
         Glib::ustring::size_type found = name.lowercase().find(regex.lowercase());
         if (found!=Glib::ustring::npos){
             row = *(listStore->append());
-            row[cols.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
-            row[cols.col_name] = name;
+            row[pinfo.col_plug] = plug;
+            row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            row[pinfo.col_name] = name;
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
-        
-            LilvNode* nd = lilv_plugin_get_author_name(plug);
+            nd = lilv_plugin_get_author_name(plug);
             if (!nd) {
                 nd = lilv_plugin_get_project(plug);
             }
@@ -145,7 +344,7 @@ void LV2PluginList::refill_list() {
                 tip += tipby + lilv_node_as_string(nd);
             }
             lilv_node_free(nd);
-            row[cols.col_tip] = tip;
+            row[pinfo.col_tip] = tip;
         }
     }
 }
@@ -170,17 +369,18 @@ void LV2PluginList::on_entry_changed() {
 }
 
 void LV2PluginList::on_combo_changed() {
-    interpret = comboBox.get_entry()->get_text();
+    pstore.interpret = comboBox.get_active_text();
 }
 
 void LV2PluginList::on_selection_changed() {
     Gtk::TreeModel::iterator iter = selection->get_selected();
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring id = interpret + " " + row[cols.col_id] + " & " ;
-        if (system(NULL)) system( id.c_str());
+        const LilvPlugin* plug = row[pinfo.col_plug];
+        Glib::ustring id = " " + row[pinfo.col_id] + " & " ;
+        pstore.create_preset_list( id, plug, world);
         selection->unselect(*iter);
-    }       
+    }
 }
 
 void LV2PluginList::on_button_quit() {

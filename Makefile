@@ -8,7 +8,7 @@
 
 	# set name
 	NAME = jalv.select
-	VER = 0.1
+	VER = 0.2
 	# create debian package
 	DEBNAME = jalvselect_$(VER)
 	CREATEDEB = yes '' | dh_make -s -n -e $(USER)@org -p $(DEBNAME) -c gpl >/dev/null
@@ -24,7 +24,7 @@
 	RED =  "\033[1;31m"
 	NONE = "\033[0m"
 
-.PHONY : all clean install uninstall 
+.PHONY : all clean dist-clean install tar deb uninstall 
 
 all : $(NAME)
 	@if [ -f $(NAME) ]; then echo $(BLUE)"build finish, now run make install"; \
@@ -70,5 +70,5 @@ uninstall :
 	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png
 	@echo ". ." $(BLUE)", done"$(NONE)
 
-$(NAME) : 
+$(NAME) : $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDFLAGS) -o $(NAME)
