@@ -1,6 +1,4 @@
 #include <gtkmm.h>
-#include <giomm.h>
-#include <iostream>
 
 #include <lilv/lilv.h>
 #include "lv2/lv2plug.in/ns/ext/presets/presets.h"
@@ -289,17 +287,23 @@ void LV2PluginList::fill_list() {
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
-    LilvNode* nd;
+    LilvNode* nd = NULL;
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
 
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
         row = *(listStore->append());
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
+        if (plug) {
+            nd = lilv_plugin_get_name(plug);
+        }
+        if (nd) {
+        row[pinfo.col_name] = lilv_node_as_string(nd);
         row[pinfo.col_plug] = plug;
         row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
-        nd = lilv_plugin_get_name(plug);
-        row[pinfo.col_name] = lilv_node_as_string(nd);
+        } else {
+            continue;
+        }
         lilv_node_free(nd);
         const LilvPluginClass* cls = lilv_plugin_get_class(plug);
         tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
@@ -325,8 +329,14 @@ void LV2PluginList::refill_list() {
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
-        nd = lilv_plugin_get_name(plug);
-        name = lilv_node_as_string(nd);
+        if (plug) {
+            nd = lilv_plugin_get_name(plug);
+        }
+        if (nd) {
+            name = lilv_node_as_string(nd);
+        } else {
+            continue;
+        }
         lilv_node_free(nd);
         Glib::ustring::size_type found = name.lowercase().find(regex.lowercase());
         if (found!=Glib::ustring::npos){
