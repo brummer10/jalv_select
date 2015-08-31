@@ -30,15 +30,9 @@ class PresetList {
     Glib::RefPtr<Gtk::ListStore> presetStore;
     Gtk::TreeModel::Row row ;
     
-    int write_state_to_file(Glib::ustring state);
     void on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world);
     void on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id);
     void create_preset_menu(Glib::ustring id, LilvWorld* world);
-    
-    static char** uris;
-    static size_t n_uris;
-    static const char* unmap_uri(LV2_URID_Map_Handle handle, LV2_URID urid);
-    static LV2_URID map_uri(LV2_URID_Map_Handle handle, const char* uri);
 
     public:
     Glib::ustring interpret;
@@ -50,71 +44,14 @@ class PresetList {
         presetStore->set_sort_column(psets.col_label, Gtk::SORT_ASCENDING); 
     }
 
-    ~PresetList() { 
-        free(uris);
-    }
+    ~PresetList() {}
 
 };
 
-char** PresetList::uris = NULL;
-size_t PresetList::n_uris = 0;
-
-LV2_URID PresetList::map_uri(LV2_URID_Map_Handle handle, const char* uri) {
-    for (size_t i = 0; i < n_uris; ++i) {
-        if (!strcmp(uris[i], uri)) {
-            return i + 1;
-        }
-    }
-
-    uris = (char**)realloc(uris, ++n_uris * sizeof(char*));
-    uris[n_uris - 1] = const_cast<char*>(uri);
-    return n_uris;
-}
-
-const char* PresetList::unmap_uri(LV2_URID_Map_Handle handle, LV2_URID urid) {
-    if (urid > 0 && urid <= n_uris) {
-        return uris[urid - 1];
-    }
-    return NULL;
-}
-
-int PresetList::write_state_to_file(Glib::ustring state) {
-    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path("/tmp/state.ttl");
-    if (file) {
-        Glib::ustring prefix = "@prefix atom: <http://lv2plug.in/ns/ext/atom#> .\n"
-                               "@prefix lv2: <http://lv2plug.in/ns/lv2core#> .\n"
-                               "@prefix pset: <http://lv2plug.in/ns/ext/presets#> .\n"
-                               "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
-                               "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"
-                               "@prefix state: <http://lv2plug.in/ns/ext/state#> .\n"
-                               "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n";
-        prefix +=   state;
-        Glib::RefPtr<Gio::DataOutputStream> out = Gio::DataOutputStream::create(file->replace());
-        out->put_string(prefix);
-        return 1;
-    }
-    return 0;
-
-}
-
 void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world) {
     Gtk::TreeModel::Row row = *iter;
-    LV2_URID_Map       map           = { NULL, map_uri };
-    LV2_URID_Unmap     unmap         = { NULL, unmap_uri };
-
-    LilvNode* preset = lilv_new_uri(world, row.get_value(psets.col_uri).c_str());
-
-    LilvState* state = lilv_state_new_from_world(world, &map, preset);
-    lilv_state_set_label(state, row.get_value(psets.col_label).c_str());
-    Glib::ustring st = lilv_state_to_string(world,&map,&unmap,state,row.get_value(psets.col_uri).c_str(),NULL);
-    lilv_node_free(preset);
-    lilv_state_free(state);
-    st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
-    if(!write_state_to_file(st)) return;
-   
-    //Glib::ustring pre = row.get_value(psets.col_uri);
-    //Glib::ustring com = interpret + " -p " + pre + id;
-    Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
+    Glib::ustring pre = row.get_value(psets.col_uri);
+    Glib::ustring com = interpret + " -p " + pre + id;
     if (system(NULL)) system( com.c_str());
     presetStore->clear();
     delete presetMenu;
