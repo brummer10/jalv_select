@@ -23,4 +23,4 @@ Install:
 - see makefile for more options, eg. build debian package
 
 <p><p\>
-![Alternativer Text](http://i62.tinypic.com/24fagds.jpg)
+![Alternativer Text](http://i60.tinypic.com/33k42ut.png)
