@@ -107,6 +107,7 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
     LilvState* state = lilv_state_new_from_world(world, &map, preset);
     lilv_state_set_label(state, row.get_value(psets.col_label).c_str());
     Glib::ustring st = lilv_state_to_string(world,&map,&unmap,state,row.get_value(psets.col_uri).c_str(),NULL);
+    lilv_node_free(preset);
     lilv_state_free(state);
     st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
     if(!write_state_to_file(st)) return;
