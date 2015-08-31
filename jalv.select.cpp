@@ -21,7 +21,7 @@ class PresetList {
         ~Presets() {}
    
         Gtk::TreeModelColumn<Glib::ustring> col_label;
-        Gtk::TreeModelColumn<const char*> col_uri;
+        Gtk::TreeModelColumn<Glib::ustring> col_uri;
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
        
     };
@@ -101,35 +101,22 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
     Gtk::TreeModel::Row row = *iter;
     LV2_URID_Map       map           = { NULL, map_uri };
     LV2_URID_Unmap     unmap         = { NULL, unmap_uri };
-    LilvState* state = NULL;
 
-    LilvNodes* presets = lilv_plugin_get_related(row.get_value(psets.col_plug),
-      lilv_new_uri(world,LV2_PRESETS__Preset));
-    LILV_FOREACH(nodes, i, presets) {
-        const LilvNode* preset = lilv_nodes_get(presets, i);
-        lilv_world_load_resource(world, preset);
-        LilvNodes* labels = lilv_world_find_nodes(
-                world, preset, lilv_new_uri(world, LILV_NS_RDFS "label"), NULL);
-            if (labels) {
-                const LilvNode* label = lilv_nodes_get_first(labels);
-                const char* set =  lilv_node_as_string(label);
-                if (strcmp (set,row.get_value(psets.col_label).c_str()) == 0) {
-                    state = lilv_state_new_from_world(world, &map, preset);
-                    lilv_state_set_label(state, set);
-                    Glib::ustring st = lilv_state_to_string(world,&map,&unmap,state,row.get_value(psets.col_uri),NULL);
-                    lilv_state_free(state);
-                    st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
-                    if(!write_state_to_file(st)) return;
-                }
-                lilv_nodes_free(labels);
-            }
-   }
+    LilvNode* preset = lilv_new_uri(world, row.get_value(psets.col_uri).c_str());
+
+    LilvState* state = lilv_state_new_from_world(world, &map, preset);
+    lilv_state_set_label(state, row.get_value(psets.col_label).c_str());
+    Glib::ustring st = lilv_state_to_string(world,&map,&unmap,state,row.get_value(psets.col_uri).c_str(),NULL);
+    lilv_state_free(state);
+    st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
+    if(!write_state_to_file(st)) return;
    
-   //Glib::ustring pre = "'"+row.get_value(psets.col_label)+"'";
-   Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
-   if (system(NULL)) system( com.c_str());
-   presetStore->clear();
-   delete presetMenu;
+    //Glib::ustring pre = row.get_value(psets.col_uri);
+    //Glib::ustring com = interpret + " -p " + pre + id;
+    Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
+    if (system(NULL)) system( com.c_str());
+    presetStore->clear();
+    delete presetMenu;
 }
 
 void PresetList::on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id) {
@@ -298,9 +285,9 @@ void LV2PluginList::fill_list() {
             nd = lilv_plugin_get_name(plug);
         }
         if (nd) {
-        row[pinfo.col_name] = lilv_node_as_string(nd);
-        row[pinfo.col_plug] = plug;
-        row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            row[pinfo.col_name] = lilv_node_as_string(nd);
+            row[pinfo.col_plug] = plug;
+            row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
         } else {
             continue;
         }

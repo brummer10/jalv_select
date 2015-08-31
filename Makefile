@@ -28,7 +28,7 @@
 
 all : $(NAME)
 	@if [ -f $(NAME) ]; then echo $(BLUE)"build finish, now run make install"; \
-	else echo $(RED)"sorry, build failed"; fi
+	else echo -e $(RED)"sorry, build failed" $(NONE); fi
 	@echo $(NONE)
 
 clean :
@@ -64,7 +64,7 @@ deb :
 	@ #-@echo $(DIRS) > ./debian/dirs
 	@echo $(BLUE)"try to build debian package, that may take some time"$(NONE)
 	-@ if $(BUILDDEB); then echo ". ." $(BLUE)", done"$(NONE); else \
-     echo $(RED)"sorry, build fail"$(NONE); fi
+     echo -e $(RED)"sorry, build fail"$(NONE); fi
 
 uninstall :
 	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png
