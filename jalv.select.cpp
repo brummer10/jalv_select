@@ -1,4 +1,5 @@
 #include <gtkmm.h>
+#include <fstream>
 
 #include <lilv/lilv.h>
 #include "lv2/lv2plug.in/ns/ext/presets/presets.h"
@@ -217,6 +218,7 @@ class LV2PluginList : public Gtk::Window {
     LV2_URID_Map map;
     LV2_Feature map_feature;
     
+    void get_interpreter();
     void fill_list();
     void refill_list();
     void new_list();
@@ -232,13 +234,7 @@ class LV2PluginList : public Gtk::Window {
         new_world(false) {
         set_title("LV2 plugs");
         set_default_size(350,200);
-        comboBox.append("jalv.gtk ");
-        comboBox.append("jalv.gtkmm ");
-        comboBox.append("jalv.gtk3 ");
-        comboBox.append("jalv.qt ");
-        //comboBox.append("jalv.extui ");
-        comboBox.set_active(0);
-        pstore.interpret = "jalv.gtk ";
+        get_interpreter();
 
         treeView.set_model(listStore = Gtk::ListStore::create(pinfo));
         treeView.append_column("Name", pinfo.col_name);
@@ -268,6 +264,22 @@ class LV2PluginList : public Gtk::Window {
         lilv_world_free(world);
     }
 };
+
+void LV2PluginList::get_interpreter() {
+    if (system(NULL) ) 
+        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv. >/tmp/jalv.interpreter" );
+    std::ifstream input( "/tmp/jalv.interpreter" );
+    int s = 0;
+    for( std::string line; getline( input, line ); ) {
+        if ((line.compare("jalv.select") !=0)){
+            comboBox.append(line);
+            if ((line.compare("jalv.gtk") ==0))
+                comboBox.set_active(s);
+                s++;
+        }
+    }        
+    pstore.interpret = comboBox.get_active_text(); 
+}
 
 void LV2PluginList::fill_list() {
     Glib::ustring tip;
