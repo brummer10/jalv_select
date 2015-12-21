@@ -15,7 +15,7 @@
 	DIRS = $(BIN_DIR)  $(DESKAPPS_DIR)  $(PIXMAPS_DIR) 
 	BUILDDEB = dpkg-buildpackage -rfakeroot -b 2>/dev/null | grep dpkg-deb 
 	# set compile flags
-	CXXFLAGS = `pkg-config gtkmm-2.4 lilv-0 --cflags` 
+	CXXFLAGS = -std=c++11 `pkg-config gtkmm-2.4 lilv-0 --cflags` 
 	LDFLAGS = `pkg-config gtkmm-2.4 lilv-0 --libs`
 	# invoke build files
 	OBJECTS = $(NAME).cpp 
