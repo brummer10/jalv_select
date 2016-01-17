@@ -255,7 +255,7 @@ class LV2PluginList : public Gtk::Window {
     public:
     LV2PluginList() :
         buttonQuit("Quit"),
-        newList("New"),
+        newList("Refresh"),
         new_world(false) {
         set_title("LV2 plugs");
         set_default_size(350,200);

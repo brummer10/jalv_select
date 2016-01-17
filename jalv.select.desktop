@@ -1,11 +1,10 @@
-
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=jalv.select
 Comment=Simple Interface for jalv
+Comment[fr]=Interface simple pour jalv
 Exec=jalv.select
 Icon=lv2
 Categories=AudioVideo;Audio;
 Terminal=false
-Name[de_DE]=jalv.select
