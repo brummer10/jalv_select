@@ -1,6 +1,8 @@
 jalv.select
 ===========
 
+![Puplic Domain](http://freedomdefined.org/upload/2/20/Pd-button.png)
+
 A little gtkmm GUI to select lv2 plugs from a list
 and run them with jalv. 
 
