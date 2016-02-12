@@ -291,8 +291,8 @@ class LV2PluginList : public Gtk::Window {
 };
 
 void LV2PluginList::get_interpreter() {
-    if (system(NULL) ) 
-        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv. >/tmp/jalv.interpreter" );
+    if (system(NULL) )
+        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' >/tmp/jalv.interpreter" );
     std::ifstream input( "/tmp/jalv.interpreter" );
     int s = 0;
     for( std::string line; getline( input, line ); ) {
