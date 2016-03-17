@@ -228,7 +228,7 @@ class LV2PluginList : public Gtk::Window {
 
 void LV2PluginList::get_interpreter() {
     if (system(NULL) ) 
-        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv. >/tmp/jalv.interpreter" );
+        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' >/tmp/jalv.interpreter" );
     std::ifstream input( "/tmp/jalv.interpreter" );
     int s = 0;
     for( std::string line; getline( input, line ); ) {
@@ -283,6 +283,7 @@ void LV2PluginList::fill_list() {
 
 void LV2PluginList::refill_list() {
     Glib::ustring name;
+    Glib::ustring name_search;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
@@ -294,19 +295,20 @@ void LV2PluginList::refill_list() {
             nd = lilv_plugin_get_name(plug);
         }
         if (nd) {
+            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
+            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             name = lilv_node_as_string(nd);
+            name_search = name+tip;
         } else {
             continue;
         }
         lilv_node_free(nd);
-        Glib::ustring::size_type found = name.lowercase().find(regex.lowercase());
+        Glib::ustring::size_type found = name_search.lowercase().find(regex.lowercase());
         if (found!=Glib::ustring::npos){
             row = *(listStore->append());
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             row[pinfo.col_name] = name;
-            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
-            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             nd = lilv_plugin_get_author_name(plug);
             if (!nd) {
                 nd = lilv_plugin_get_project(plug);
