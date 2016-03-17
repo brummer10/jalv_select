@@ -221,14 +221,15 @@ class LV2PluginList : public Gtk::Window {
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
     };
     PlugInfo pinfo;
-
+    
+    std::vector<Glib::ustring> cats;
     Gtk::VBox topBox;
     Gtk::HBox buttonBox;
     Gtk::ComboBoxText comboBox;
     Gtk::ScrolledWindow scrollWindow;
     Gtk::Button buttonQuit;
     Gtk::Button newList;
-    Gtk::Entry textEntry;
+    Gtk::ComboBoxEntryText textEntry;
     Gtk::TreeView treeView;
     Gtk::TreeModel::Row row ;
 
@@ -247,6 +248,7 @@ class LV2PluginList : public Gtk::Window {
     void fill_list();
     void refill_list();
     void new_list();
+    void fill_class_list();
     virtual void on_selection_changed();
     virtual void on_combo_changed();
     virtual void on_entry_changed();
@@ -266,6 +268,7 @@ class LV2PluginList : public Gtk::Window {
         treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
         fill_list();
+        fill_class_list();
 
         scrollWindow.add(treeView);
         scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
@@ -332,7 +335,7 @@ void LV2PluginList::fill_list() {
         lilv_node_free(nd);
         const LilvPluginClass* cls = lilv_plugin_get_class(plug);
         tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
-        
+        cats.insert(cats.begin(),tip);
         nd = lilv_plugin_get_author_name(plug);
         if (!nd) {
             nd = lilv_plugin_get_project(plug);
@@ -391,13 +394,20 @@ void LV2PluginList::new_list() {
     listStore->clear();
     lilv_world_free(world);
     world = NULL;
-    textEntry.set_text("");
+    textEntry.get_entry()->set_text("");
     fill_list();
+}
+
+void LV2PluginList::fill_class_list() {
+    sort(cats.begin(), cats.end());
+    cats.erase( unique(cats.begin(), cats.end()), cats.end());
+    for (std::vector<Glib::ustring>::iterator it = cats.begin() ; it != cats.end(); ++it)
+        textEntry.append_text(*it);
 }
 
 void LV2PluginList::on_entry_changed() {
     if(! new_world) {
-        regex = textEntry.get_text();
+        regex = textEntry.get_entry()->get_text();
         listStore->clear();
         refill_list();
     } else {
