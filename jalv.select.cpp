@@ -347,6 +347,7 @@ void LV2PluginList::fill_list() {
 
 void LV2PluginList::refill_list() {
     Glib::ustring name;
+    Glib::ustring name_search;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
@@ -359,18 +360,19 @@ void LV2PluginList::refill_list() {
         }
         if (nd) {
             name = lilv_node_as_string(nd);
+            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
+            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
+            name_search = name+tip;
         } else {
             continue;
         }
         lilv_node_free(nd);
-        Glib::ustring::size_type found = name.lowercase().find(regex.lowercase());
+        Glib::ustring::size_type found = name_search.lowercase().find(regex.lowercase());
         if (found!=Glib::ustring::npos){
             row = *(listStore->append());
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             row[pinfo.col_name] = name;
-            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
-            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             nd = lilv_plugin_get_author_name(plug);
             if (!nd) {
                 nd = lilv_plugin_get_project(plug);
