@@ -281,6 +281,7 @@ class LV2PluginList : public Gtk::Window {
         add(topBox);
 
         selection = treeView.get_selection();
+        selection->unselect_all();
         selection->signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_selection_changed) );
         buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
         newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
