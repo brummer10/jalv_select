@@ -263,10 +263,12 @@ class LV2PluginList : public Gtk::Window {
         set_default_size(350,200);
         get_interpreter();
 
-        treeView.set_model(listStore = Gtk::ListStore::create(pinfo));
+        listStore = Gtk::ListStore::create(pinfo);
+        treeView.set_model(listStore);
         treeView.append_column("Name", pinfo.col_name);
         treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
+        listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
         fill_list();
         fill_class_list();
 
