@@ -322,12 +322,12 @@ void LV2PluginList::fill_list() {
 
     for (it; !lilv_plugins_is_end(lv2_plugins, it);
     it = lilv_plugins_next(lv2_plugins, it)) {
-        row = *(listStore->append());
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
         if (plug) {
             nd = lilv_plugin_get_name(plug);
         }
         if (nd) {
+            row = *(listStore->append());
             row[pinfo.col_name] = lilv_node_as_string(nd);
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
