@@ -476,7 +476,7 @@ bool LV2PluginList::avoid_popup() {
     selection->unselect_all();
     textEntry.grab_focus();
     no_popup = false;
-    return true;
+    return false;
 }
 
 void LV2PluginList::on_button_quit() {
