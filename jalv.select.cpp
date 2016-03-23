@@ -243,6 +243,7 @@ class LV2PluginList : public Gtk::Window {
     Glib::RefPtr<Gtk::TreeView::Selection> selection;
     Glib::ustring regex;
     bool new_world;
+    bool no_popup;
 
     LilvWorld* world;
     const LilvPlugins* lv2_plugins;
@@ -256,6 +257,7 @@ class LV2PluginList : public Gtk::Window {
     void fill_class_list();
     void systray_menu(guint button, guint32 activate_time);
     void systray_hide();
+    bool avoid_popup(); 
 
     virtual void on_selection_changed();
     virtual void on_combo_changed();
@@ -269,7 +271,8 @@ class LV2PluginList : public Gtk::Window {
         mainwin_x(0),
         mainwin_y(0),
         status_icon(Gtk::StatusIcon::create_from_file("lv2.png")),
-        new_world(false) {
+        new_world(false),
+        no_popup(true) {
         set_title("LV2 plugs");
         set_default_size(350,200);
         get_interpreter();
@@ -308,6 +311,7 @@ class LV2PluginList : public Gtk::Window {
         show_all();
         selection->unselect_all();
         textEntry.grab_focus();
+        Glib::signal_timeout().connect (mem_fun (*this, &LV2PluginList::avoid_popup), 5);
     }
     ~LV2PluginList() {
         lilv_world_free(world);
@@ -441,6 +445,7 @@ void LV2PluginList::on_combo_changed() {
 }
 
 void LV2PluginList::on_selection_changed() {
+    if (no_popup) return;
     Gtk::TreeModel::iterator iter = selection->get_selected();
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
@@ -465,6 +470,13 @@ void LV2PluginList::systray_hide() {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
         hide();
     }
+}
+
+bool LV2PluginList::avoid_popup() {
+    selection->unselect_all();
+    textEntry.grab_focus();
+    no_popup = false;
+    return true;
 }
 
 void LV2PluginList::on_button_quit() {
