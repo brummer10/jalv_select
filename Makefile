@@ -23,14 +23,18 @@
 	BLUE = "\033[1;34m"
 	RED =  "\033[1;31m"
 	NONE = "\033[0m"
+	## check if config.h is valid
+	CONFIG_H := $(shell cat config.h 2>/dev/null | grep PIXMAPS_DIR | grep -oP '[^"]*"\K[^"]*')
 
 .PHONY : all clean dist-clean install tar deb uninstall 
 
 all : config check
 
 config :
-	@echo '#define VERSION  "$(VER)"' > config.h ;
-	@echo '#define PIXMAPS_DIR  "$(PIXMAPS_DIR)"' >> config.h ;
+ifneq ($(CONFIG_H), $(PIXMAPS_DIR))
+	@echo '#define VERSION  "$(VER)"' > config.h 
+	@echo '#define PIXMAPS_DIR  "$(PIXMAPS_DIR)"' >> config.h 
+endif
 
 check : $(NAME)
 	@if [ -f $(NAME) ]; then echo $(BLUE)"build finish, now run make install"; \
@@ -53,6 +57,7 @@ install : all
 	install $(NAME) $(DESTDIR)$(BIN_DIR)
 	install $(NAME).desktop $(DESTDIR)$(DESKAPPS_DIR)
 	install lv2.png $(DESTDIR)$(PIXMAPS_DIR)
+	install lv2_16.png $(DESTDIR)$(PIXMAPS_DIR)
 	@echo ". ." $(BLUE)", done"$(NONE)
 
     #@create tar ball
@@ -73,7 +78,7 @@ deb :
      echo -e $(RED)"sorry, build fail"$(NONE); fi
 
 uninstall :
-	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png
+	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png
 	@echo ". ." $(BLUE)", done"$(NONE)
 
 $(NAME) : $(OBJECTS) config.h

@@ -257,7 +257,7 @@ class LV2PluginList : public Gtk::Window {
     void fill_class_list();
     void systray_menu(guint button, guint32 activate_time);
     void systray_hide();
-    bool avoid_popup(); 
+    void avoid_popup(); 
 
     virtual void on_selection_changed();
     virtual void on_combo_changed();
@@ -296,7 +296,7 @@ class LV2PluginList : public Gtk::Window {
         buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
         add(topBox);
 
-        set_icon_from_file(PIXMAPS_DIR "/lv2.png");
+        set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
         menuQuit.set_label("Quit");
         MenuPopup.append(menuQuit);
 
@@ -312,7 +312,7 @@ class LV2PluginList : public Gtk::Window {
         show_all();
         selection->unselect_all();
         textEntry.grab_focus();
-        Glib::signal_timeout().connect (mem_fun (*this, &LV2PluginList::avoid_popup), 5);
+        Glib::signal_timeout().connect_once (mem_fun (*this, &LV2PluginList::avoid_popup), 5);
     }
     ~LV2PluginList() {
         lilv_world_free(world);
@@ -473,11 +473,10 @@ void LV2PluginList::systray_hide() {
     }
 }
 
-bool LV2PluginList::avoid_popup() {
+void LV2PluginList::avoid_popup() {
     selection->unselect_all();
     textEntry.grab_focus();
     no_popup = false;
-    return false;
 }
 
 void LV2PluginList::on_button_quit() {
