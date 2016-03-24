@@ -26,7 +26,13 @@
 
 .PHONY : all clean dist-clean install tar deb uninstall 
 
-all : $(NAME)
+all : config check
+
+config :
+	@echo '#define VERSION  "$(VER)"' > config.h ;
+	@echo '#define PIXMAPS_DIR  "$(PIXMAPS_DIR)"' >> config.h ;
+
+check : $(NAME)
 	@if [ -f $(NAME) ]; then echo $(BLUE)"build finish, now run make install"; \
 	else echo -e $(RED)"sorry, build failed" $(NONE); fi
 	@echo $(NONE)
@@ -70,5 +76,5 @@ uninstall :
 	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png
 	@echo ". ." $(BLUE)", done"$(NONE)
 
-$(NAME) : $(OBJECTS)
+$(NAME) : $(OBJECTS) config.h
 	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDFLAGS) -o $(NAME)

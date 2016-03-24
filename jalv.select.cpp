@@ -31,7 +31,7 @@
 #include "lv2/lv2plug.in/ns/ext/state/state.h"
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 
-
+#include "config.h"
 
 
 
@@ -270,7 +270,7 @@ class LV2PluginList : public Gtk::Window {
         newList("Refresh"),
         mainwin_x(0),
         mainwin_y(0),
-        status_icon(Gtk::StatusIcon::create_from_file("lv2.png")),
+        status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
         new_world(false),
         no_popup(true) {
         set_title("LV2 plugs");
@@ -295,7 +295,8 @@ class LV2PluginList : public Gtk::Window {
         buttonBox.pack_start(newList,Gtk::PACK_SHRINK);
         buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
         add(topBox);
-        
+
+        set_icon_from_file(PIXMAPS_DIR "/lv2.png");
         menuQuit.set_label("Quit");
         MenuPopup.append(menuQuit);
 
