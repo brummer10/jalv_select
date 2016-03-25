@@ -59,6 +59,7 @@ class PresetList {
     int write_state_to_file(Glib::ustring state);
     void on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world);
     void on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id);
+    void on_menu_deactivate();
     void create_preset_menu(Glib::ustring id, LilvWorld* world);
     
     static char** uris;
@@ -68,6 +69,7 @@ class PresetList {
 
     public:
     Glib::ustring interpret;
+    Glib::RefPtr<Gtk::TreeView::Selection> selection;
 
     void create_preset_list(Glib::ustring id, const LilvPlugin* plug, LilvWorld* world);
     
@@ -147,31 +149,40 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
 }
 
 void PresetList::on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id) {
-   Glib::ustring com = interpret + id;
-   if (system(NULL)) system( com.c_str());
-   presetStore->clear();
-   delete presetMenu;
+    Glib::ustring com = interpret + id;
+    if (system(NULL)) system( com.c_str());
+    presetStore->clear();
+    delete presetMenu;
+}
+
+void PresetList::on_menu_deactivate() {
+    Gtk::TreeModel::iterator iter = selection->get_selected();
+    if(iter) selection->unselect(*iter);
 }
 
 void PresetList::create_preset_menu(Glib::ustring id, LilvWorld* world) {
     Gtk::MenuItem* item;
     Gtk::Menu *presetMenu = Gtk::manage(new Gtk::Menu());
+    presetMenu->signal_deactivate().connect(sigc::mem_fun(
+          *this, &PresetList::on_menu_deactivate));
     item = Gtk::manage(new Gtk::MenuItem("Default", true));
     item->signal_activate().connect(
           sigc::bind(sigc::bind(sigc::mem_fun(
           *this, &PresetList::on_preset_default),id),presetMenu));
     presetMenu->append(*item);
-    Gtk::SeparatorMenuItem *hline = Gtk::manage(new Gtk::SeparatorMenuItem());
-    presetMenu->append(*hline);
-    for (Gtk::TreeModel::iterator i = presetStore->children().begin();
+    if (presetStore->children().end() != presetStore->children().begin()) {
+        Gtk::SeparatorMenuItem *hline = Gtk::manage(new Gtk::SeparatorMenuItem());
+        presetMenu->append(*hline);
+        for (Gtk::TreeModel::iterator i = presetStore->children().begin();
                                   i != presetStore->children().end(); i++) {
-        Gtk::TreeModel::Row row = *i; 
-        item = Gtk::manage(new Gtk::MenuItem(row[psets.col_label], true));
-        item->signal_activate().connect(
+            Gtk::TreeModel::Row row = *i; 
+            item = Gtk::manage(new Gtk::MenuItem(row[psets.col_label], true));
+            item->signal_activate().connect(
               sigc::bind(sigc::bind(sigc::bind(sigc::bind(sigc::mem_fun(
               *this, &PresetList::on_preset_selected),world),i),id),presetMenu));
-        presetMenu->append(*item);
+            presetMenu->append(*item);
             
+        }
     }
     presetMenu->show_all();
     presetMenu->popup(0,gtk_get_current_event_time());
@@ -221,7 +232,14 @@ class LV2PluginList : public Gtk::Window {
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
     };
     PlugInfo pinfo;
-    
+
+    template <class T>
+    inline std::string to_string(const T& t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+    }
+
     std::vector<Glib::ustring> cats;
     Gtk::VBox topBox;
     Gtk::HBox buttonBox;
@@ -236,6 +254,8 @@ class LV2PluginList : public Gtk::Window {
     Gtk::MenuItem menuQuit;
     int32_t mainwin_x;
     int32_t mainwin_y;
+    int32_t valid_plugs;
+    int32_t invalid_plugs;
 
     PresetList pstore;
     Glib::RefPtr<Gtk::StatusIcon> status_icon;
@@ -270,6 +290,8 @@ class LV2PluginList : public Gtk::Window {
         newList("Refresh"),
         mainwin_x(0),
         mainwin_y(0),
+        valid_plugs(0),
+        invalid_plugs(0),
         status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
         new_world(false),
         no_popup(true) {
@@ -301,6 +323,7 @@ class LV2PluginList : public Gtk::Window {
         MenuPopup.append(menuQuit);
 
         selection = treeView.get_selection();
+        pstore.selection = selection;
         selection->signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_selection_changed) );
         buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
         newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
@@ -336,6 +359,9 @@ void LV2PluginList::get_interpreter() {
 }
 
 void LV2PluginList::fill_list() {
+    valid_plugs = 0;
+    invalid_plugs = 0;
+    Glib::ustring tool_tip;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
     world = lilv_world_new();
@@ -355,7 +381,9 @@ void LV2PluginList::fill_list() {
             row[pinfo.col_name] = lilv_node_as_string(nd);
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            valid_plugs++;
         } else {
+            invalid_plugs++;
             continue;
         }
         lilv_node_free(nd);
@@ -372,6 +400,9 @@ void LV2PluginList::fill_list() {
         lilv_node_free(nd);
         row[pinfo.col_tip] = tip;
     }
+    tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
+    tool_tip += to_string(invalid_plugs)+" invalid plugins found";
+    status_icon->set_tooltip_text(tool_tip);
 }
 
 void LV2PluginList::refill_list() {
@@ -453,7 +484,6 @@ void LV2PluginList::on_selection_changed() {
         const LilvPlugin* plug = row[pinfo.col_plug];
         Glib::ustring id = " " + row[pinfo.col_id] + " & " ;
         pstore.create_preset_list( id, plug, world);
-        selection->unselect(*iter);
     }
 }
 
