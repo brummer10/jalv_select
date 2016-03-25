@@ -28,9 +28,9 @@
 
 .PHONY : all clean dist-clean install tar deb uninstall 
 
-all : config check
+all : check
 
-config :
+config.h : 
 ifneq ($(CONFIG_H), $(PIXMAPS_DIR))
 	@echo '#define VERSION  "$(VER)"' > config.h 
 	@echo '#define PIXMAPS_DIR  "$(PIXMAPS_DIR)"' >> config.h 
@@ -43,11 +43,13 @@ check : $(NAME)
 
 clean :
 	@rm -f $(NAME)
+	@rm -f config.h
 	@echo ". ." $(BLUE)", clean"$(NONE)
 
 dist-clean :
 	@rm -rf ./debian
 	@rm -f $(NAME)
+	@rm -f config.h
 	@echo ". ." $(BLUE)", clean"$(NONE)
 
 install : all
@@ -81,5 +83,5 @@ uninstall :
 	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png
 	@echo ". ." $(BLUE)", done"$(NONE)
 
-$(NAME) : $(OBJECTS) config.h
+$(NAME) : config.h $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDFLAGS) -o $(NAME)
