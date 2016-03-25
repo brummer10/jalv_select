@@ -304,12 +304,14 @@ class LV2PluginList : public Gtk::Window {
         treeView.append_column("Name", pinfo.col_name);
         treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
+        treeView.set_can_focus(false);
         listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
         fill_list();
         fill_class_list();
 
         scrollWindow.add(treeView);
         scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        scrollWindow.get_vscrollbar()->set_can_focus(true);
         topBox.pack_start(scrollWindow);
         topBox.pack_end(buttonBox,Gtk::PACK_SHRINK);
         buttonBox.pack_start(comboBox,Gtk::PACK_SHRINK);
