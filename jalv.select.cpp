@@ -214,6 +214,23 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
     create_preset_menu(id, world);
 }
 
+class Options : public Glib::OptionContext {
+    Glib::OptionGroup o_group;
+    Glib::OptionEntry opt_hide;
+public:
+    bool hidden;
+    Options() :
+        o_group("",""),
+        hidden(false) {
+        opt_hide.set_short_name('s');
+        opt_hide.set_long_name("systray");
+        opt_hide.set_description("start minimized in systray");
+        o_group.add_entry(opt_hide, hidden);
+        set_main_group(o_group);
+    }
+    ~Options() {}
+};
+
 class LV2PluginList : public Gtk::Window {
 
     class PlugInfo : public Gtk::TreeModel::ColumnRecord {
@@ -285,11 +302,13 @@ class LV2PluginList : public Gtk::Window {
     virtual void on_button_quit();
 
     public:
+    Options options;
+
     LV2PluginList() :
         buttonQuit("Quit"),
         newList("Refresh"),
-        mainwin_x(0),
-        mainwin_y(0),
+        mainwin_x(-1),
+        mainwin_y(-1),
         valid_plugs(0),
         invalid_plugs(0),
         status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
@@ -497,7 +516,11 @@ void LV2PluginList::systray_menu(guint button, guint32 activate_time) {
 void LV2PluginList::systray_hide() {
     if (get_window()->get_state()
      & (Gdk::WINDOW_STATE_ICONIFIED|Gdk::WINDOW_STATE_WITHDRAWN)) {
-        move(mainwin_x, mainwin_y);
+        if(!options.hidden) {
+            move(mainwin_x, mainwin_y);
+        } else {
+            options.hidden = false;
+        }
         present();
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
@@ -518,6 +541,10 @@ void LV2PluginList::on_button_quit() {
 int main (int argc , char ** argv) {
     Gtk::Main kit (argc, argv);
     LV2PluginList lv2plugs;
+
+    lv2plugs.options.parse(argc, argv);
+    if(lv2plugs.options.hidden) lv2plugs.hide();
+
     Gtk::Main::run();
     return 0;
 }
