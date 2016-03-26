@@ -264,7 +264,7 @@ class LV2PluginList : public Gtk::Window {
     Gtk::ScrolledWindow scrollWindow;
     Gtk::Button buttonQuit;
     Gtk::Button newList;
-    Gtk::ComboBoxEntryText textEntry;
+    Gtk::ComboBoxText textEntry;
     Gtk::TreeView treeView;
     Gtk::TreeModel::Row row ;
     Gtk::Menu MenuPopup;
@@ -280,7 +280,6 @@ class LV2PluginList : public Gtk::Window {
     Glib::RefPtr<Gtk::TreeView::Selection> selection;
     Glib::ustring regex;
     bool new_world;
-    bool no_popup;
 
     LilvWorld* world;
     const LilvPlugins* lv2_plugins;
@@ -294,9 +293,10 @@ class LV2PluginList : public Gtk::Window {
     void fill_class_list();
     void systray_menu(guint button, guint32 activate_time);
     void systray_hide();
-    void avoid_popup(); 
-
-    virtual void on_selection_changed();
+    void show_preset_menu();
+    void button_release_event(GdkEventButton *ev);
+    bool key_release_event(GdkEventKey *ev);
+    
     virtual void on_combo_changed();
     virtual void on_entry_changed();
     virtual void on_button_quit();
@@ -307,13 +307,13 @@ class LV2PluginList : public Gtk::Window {
     LV2PluginList() :
         buttonQuit("Quit"),
         newList("Refresh"),
+        textEntry(true),
         mainwin_x(-1),
         mainwin_y(-1),
         valid_plugs(0),
         invalid_plugs(0),
         status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
-        new_world(false),
-        no_popup(true) {
+        new_world(false) {
         set_title("LV2 plugs");
         set_default_size(350,200);
         get_interpreter();
@@ -323,7 +323,6 @@ class LV2PluginList : public Gtk::Window {
         treeView.append_column("Name", pinfo.col_name);
         treeView.set_tooltip_column(2);
         treeView.set_rules_hint(true);
-        treeView.set_can_focus(false);
         listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
         fill_list();
         fill_class_list();
@@ -345,7 +344,8 @@ class LV2PluginList : public Gtk::Window {
 
         selection = treeView.get_selection();
         pstore.selection = selection;
-        selection->signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_selection_changed) );
+        treeView.signal_button_release_event().connect_notify(sigc::mem_fun(*this, &LV2PluginList::button_release_event));
+        treeView.signal_key_release_event().connect(sigc::mem_fun(*this, &LV2PluginList::key_release_event));
         buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
         newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
         comboBox.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
@@ -354,9 +354,7 @@ class LV2PluginList : public Gtk::Window {
         status_icon->signal_popup_menu().connect( sigc::mem_fun(*this, &LV2PluginList::systray_menu));
         menuQuit.signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
         show_all();
-        selection->unselect_all();
-        textEntry.grab_focus();
-        Glib::signal_timeout().connect_once (mem_fun (*this, &LV2PluginList::avoid_popup), 5);
+        treeView.grab_focus();
     }
     ~LV2PluginList() {
         lilv_world_free(world);
@@ -497,8 +495,7 @@ void LV2PluginList::on_combo_changed() {
     pstore.interpret = comboBox.get_active_text();
 }
 
-void LV2PluginList::on_selection_changed() {
-    if (no_popup) return;
+void LV2PluginList::show_preset_menu() {
     Gtk::TreeModel::iterator iter = selection->get_selected();
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
@@ -506,6 +503,19 @@ void LV2PluginList::on_selection_changed() {
         Glib::ustring id = " " + row[pinfo.col_id] + " & " ;
         pstore.create_preset_list( id, plug, world);
     }
+}
+
+void LV2PluginList::button_release_event(GdkEventButton *ev) {
+    if (ev->type == GDK_BUTTON_RELEASE && ev->button == 1) {
+        show_preset_menu();
+    }
+}
+
+bool LV2PluginList::key_release_event(GdkEventKey *ev) {
+    if (ev->keyval == 0xff0d) { // GDK_KEY_Return
+        show_preset_menu();
+    }
+    return true;
 }
 
 void LV2PluginList::systray_menu(guint button, guint32 activate_time) {
@@ -526,12 +536,6 @@ void LV2PluginList::systray_hide() {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
         hide();
     }
-}
-
-void LV2PluginList::avoid_popup() {
-    selection->unselect_all();
-    textEntry.grab_focus();
-    no_popup = false;
 }
 
 void LV2PluginList::on_button_quit() {
