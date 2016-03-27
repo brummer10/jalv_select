@@ -59,9 +59,9 @@ class PresetList {
     int write_state_to_file(Glib::ustring state);
     void on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world);
     void on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id);
-    void on_menu_deactivate();
     void create_preset_menu(Glib::ustring id, LilvWorld* world);
-    
+    void on_preset_key(GdkEventKey *ev,Gtk::Menu *presetMenu);
+
     static char** uris;
     static size_t n_uris;
     static const char* unmap_uri(LV2_URID_Map_Handle handle, LV2_URID urid);
@@ -140,6 +140,8 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
     st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
     if(!write_state_to_file(st)) return;
    
+    Gtk::TreeModel::iterator it = selection->get_selected();
+    if(iter) selection->unselect(*it);
     //Glib::ustring pre = row.get_value(psets.col_uri);
     //Glib::ustring com = interpret + " -p " + pre + id;
     Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
@@ -149,24 +151,29 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
 }
 
 void PresetList::on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id) {
+    Gtk::TreeModel::iterator iter = selection->get_selected();
+    if(iter) selection->unselect(*iter);
     Glib::ustring com = interpret + id;
     if (system(NULL)) system( com.c_str());
     presetStore->clear();
     delete presetMenu;
 }
 
-void PresetList::on_menu_deactivate() {
-    Gtk::TreeModel::iterator iter = selection->get_selected();
-    if(iter) selection->unselect(*iter);
+void PresetList::on_preset_key(GdkEventKey *ev,Gtk::Menu *presetMenu) {
+    if (ev->keyval == 0xffff) { // GDK_KEY_Delete
+        presetStore->clear();
+        delete presetMenu;
+    }
 }
 
 void PresetList::create_preset_menu(Glib::ustring id, LilvWorld* world) {
     Gtk::MenuItem* item;
     Gtk::Menu *presetMenu = Gtk::manage(new Gtk::Menu());
-    presetMenu->signal_deactivate().connect(sigc::mem_fun(
-          *this, &PresetList::on_menu_deactivate));
+    presetMenu->signal_key_release_event().connect_notify(
+          sigc::bind(sigc::mem_fun(
+          *this, &PresetList::on_preset_key),presetMenu));
     item = Gtk::manage(new Gtk::MenuItem("Default", true));
-    item->signal_activate().connect(
+    item->signal_activate().connect_notify(
           sigc::bind(sigc::bind(sigc::mem_fun(
           *this, &PresetList::on_preset_default),id),presetMenu));
     presetMenu->append(*item);
@@ -305,8 +312,8 @@ class LV2PluginList : public Gtk::Window {
     Options options;
 
     LV2PluginList() :
-        buttonQuit("Quit"),
-        newList("Refresh"),
+        buttonQuit("_Quit", true),
+        newList("_Refresh", true),
         textEntry(true),
         mainwin_x(-1),
         mainwin_y(-1),
@@ -514,6 +521,8 @@ void LV2PluginList::button_release_event(GdkEventButton *ev) {
 bool LV2PluginList::key_release_event(GdkEventKey *ev) {
     if (ev->keyval == 0xff0d) { // GDK_KEY_Return
         show_preset_menu();
+    } else if (ev->keyval == 0xff1b) { // GDK_KEY_Escape
+        systray_hide();
     }
     return true;
 }
