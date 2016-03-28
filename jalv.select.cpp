@@ -25,6 +25,9 @@
 
 #include <gtkmm.h>
 #include <fstream>
+#include <pthread.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
 
 #include <lilv/lilv.h>
 #include "lv2/lv2plug.in/ns/ext/presets/presets.h"
@@ -34,6 +37,8 @@
 #include "config.h"
 
 
+
+///*** ----------- Class PresetList definition ----------- ***///
 
 class PresetList {
 
@@ -83,6 +88,193 @@ class PresetList {
     }
 
 };
+
+///*** ----------- Class Options definition ----------- ***///
+
+class Options : public Glib::OptionContext {
+    Glib::OptionGroup o_group;
+    Glib::OptionEntry opt_hide;
+    Glib::OptionEntry opt_size;
+public:
+    bool hidden;
+    int w_high;
+    Options() :
+        o_group("",""),
+        hidden(false),
+        w_high(0) {
+        opt_hide.set_short_name('s');
+        opt_hide.set_long_name("systray");
+        opt_hide.set_description("start minimized in systray");
+        opt_size.set_short_name('H');
+        opt_size.set_long_name("high");
+        opt_size.set_description("start with given high in pixel");
+        opt_size.set_arg_description("HIGH");
+        o_group.add_entry(opt_hide, hidden);
+        o_group.add_entry(opt_size, w_high);
+       set_main_group(o_group);
+    }
+    ~Options() {}
+};
+
+///*** ----------- Class KeyGrabber definition ----------- ***///
+
+class LV2PluginList; // forward declaration (need not be resolved for KeyGrabber definition)
+
+class KeyGrabber {
+    pthread_t m_pthr;
+    void stop_keygrab_thread();
+    void start_keygrab_thread();
+    void keygrab();
+    bool err;
+
+    static void *run_keygrab_thread(void* p);
+
+public:
+    LV2PluginList *runner;
+    KeyGrabber() :
+        runner(NULL) {
+        start_keygrab_thread();
+    }
+    ~KeyGrabber() {
+        stop_keygrab_thread();
+    }
+};
+
+///*** ----------- Class LV2PluginList definition ----------- ***///
+
+class LV2PluginList : public Gtk::Window {
+
+    class PlugInfo : public Gtk::TreeModel::ColumnRecord {
+    public:
+        PlugInfo() {
+            add(col_id);
+            add(col_name);
+            add(col_tip);
+            add(col_plug);
+        }
+        ~PlugInfo() {}
+   
+        Gtk::TreeModelColumn<Glib::ustring> col_id;
+        Gtk::TreeModelColumn<Glib::ustring> col_name;
+        Gtk::TreeModelColumn<Glib::ustring> col_tip;
+        Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
+    };
+    PlugInfo pinfo;
+
+    template <class T>
+    inline std::string to_string(const T& t) {
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+    }
+
+    std::vector<Glib::ustring> cats;
+    Gtk::VBox topBox;
+    Gtk::HBox buttonBox;
+    Gtk::ComboBoxText comboBox;
+    Gtk::ScrolledWindow scrollWindow;
+    Gtk::Button buttonQuit;
+    Gtk::Button newList;
+    Gtk::ComboBoxText textEntry;
+    Gtk::TreeView treeView;
+    Gtk::TreeModel::Row row ;
+    Gtk::Menu MenuPopup;
+    Gtk::MenuItem menuQuit;
+    int32_t mainwin_x;
+    int32_t mainwin_y;
+    int32_t valid_plugs;
+    int32_t invalid_plugs;
+
+    PresetList pstore;
+    Glib::RefPtr<Gtk::StatusIcon> status_icon;
+    Glib::RefPtr<Gtk::ListStore> listStore;
+    Glib::RefPtr<Gtk::TreeView::Selection> selection;
+    Glib::ustring regex;
+    bool new_world;
+
+    LilvWorld* world;
+    const LilvPlugins* lv2_plugins;
+    LV2_URID_Map map;
+    LV2_Feature map_feature;
+    KeyGrabber kg;
+    
+    void get_interpreter();
+    void fill_list();
+    void refill_list();
+    void new_list();
+    void fill_class_list();
+    void systray_menu(guint button, guint32 activate_time);
+    void show_preset_menu();
+    void button_release_event(GdkEventButton *ev);
+    bool key_release_event(GdkEventKey *ev);
+    
+    virtual void on_combo_changed();
+    virtual void on_entry_changed();
+    virtual void on_button_quit();
+
+    public:
+    Options options;
+    void systray_hide();
+
+    LV2PluginList() :
+        buttonQuit("_Quit", true),
+        newList("_Refresh", true),
+        textEntry(true),
+        mainwin_x(-1),
+        mainwin_y(-1),
+        valid_plugs(0),
+        invalid_plugs(0),
+        status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
+        new_world(false) {
+        set_title("LV2 plugs");
+        set_default_size(350,200);
+        get_interpreter();
+        kg.runner = this;
+
+        listStore = Gtk::ListStore::create(pinfo);
+        treeView.set_model(listStore);
+        treeView.append_column("Name", pinfo.col_name);
+        treeView.set_tooltip_column(2);
+        treeView.set_rules_hint(true);
+        listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
+        fill_list();
+        fill_class_list();
+
+        scrollWindow.add(treeView);
+        scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        scrollWindow.get_vscrollbar()->set_can_focus(true);
+        topBox.pack_start(scrollWindow);
+        topBox.pack_end(buttonBox,Gtk::PACK_SHRINK);
+        buttonBox.pack_start(comboBox,Gtk::PACK_SHRINK);
+        buttonBox.pack_start(textEntry,Gtk::PACK_EXPAND_WIDGET);
+        buttonBox.pack_start(newList,Gtk::PACK_SHRINK);
+        buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
+        add(topBox);
+
+        set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
+        menuQuit.set_label("Quit");
+        MenuPopup.append(menuQuit);
+
+        selection = treeView.get_selection();
+        pstore.selection = selection;
+        treeView.signal_button_release_event().connect_notify(sigc::mem_fun(*this, &LV2PluginList::button_release_event));
+        treeView.signal_key_release_event().connect(sigc::mem_fun(*this, &LV2PluginList::key_release_event));
+        buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
+        newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
+        comboBox.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
+        textEntry.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
+        status_icon->signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::systray_hide));
+        status_icon->signal_popup_menu().connect( sigc::mem_fun(*this, &LV2PluginList::systray_menu));
+        menuQuit.signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
+        show_all();
+        treeView.grab_focus();
+    }
+    ~LV2PluginList() {
+        lilv_world_free(world);
+    }
+};
+
+///*** ----------- Class PresetList functions ----------- ***///
 
 char** PresetList::uris = NULL;
 size_t PresetList::n_uris = 0;
@@ -160,7 +352,7 @@ void PresetList::on_preset_default(Gtk::Menu *presetMenu, Glib::ustring id) {
 }
 
 void PresetList::on_preset_key(GdkEventKey *ev,Gtk::Menu *presetMenu) {
-    if (ev->keyval == 0xffff) { // GDK_KEY_Delete
+    if (ev->keyval == 0xff1b) { // GDK_KEY_Escape
         presetStore->clear();
         delete presetMenu;
     }
@@ -221,152 +413,49 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
     create_preset_menu(id, world);
 }
 
-class Options : public Glib::OptionContext {
-    Glib::OptionGroup o_group;
-    Glib::OptionEntry opt_hide;
-public:
-    bool hidden;
-    Options() :
-        o_group("",""),
-        hidden(false) {
-        opt_hide.set_short_name('s');
-        opt_hide.set_long_name("systray");
-        opt_hide.set_description("start minimized in systray");
-        o_group.add_entry(opt_hide, hidden);
-        set_main_group(o_group);
+///*** ----------- Class KeyGrabber functions ----------- ***///
+
+void KeyGrabber::keygrab() {
+    Display* dpy = XOpenDisplay(0);
+    XEvent ev;
+    unsigned int modifiers =  ShiftMask;
+    int keycode = XKeysymToKeycode(dpy,XK_Escape);
+    XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
+    XSelectInput(dpy,DefaultRootWindow(dpy), KeyPressMask);
+    while(1) {
+        XNextEvent(dpy, &ev);
+        if (ev.type == KeyPress)
+            Glib::signal_idle().connect_once(
+              sigc::mem_fun(reinterpret_cast<LV2PluginList *>(runner), 
+              &LV2PluginList::systray_hide));
+    }  
+}
+
+void *KeyGrabber::run_keygrab_thread(void *p) {
+    (reinterpret_cast<KeyGrabber *>(p))->keygrab();
+    return NULL;
+}
+
+void KeyGrabber::stop_keygrab_thread() {
+    pthread_cancel (m_pthr);
+    pthread_join (m_pthr, NULL);
+}
+
+void KeyGrabber::start_keygrab_thread() {
+    pthread_attr_t      attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE );
+    pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_attr_setschedpolicy(&attr, SCHED_OTHER);
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    if (pthread_create(&m_pthr, &attr, run_keygrab_thread,
+                       reinterpret_cast<void*>(this))) {
+        err = true;
     }
-    ~Options() {}
-};
+    pthread_attr_destroy(&attr);
+}
 
-class LV2PluginList : public Gtk::Window {
-
-    class PlugInfo : public Gtk::TreeModel::ColumnRecord {
-    public:
-        PlugInfo() {
-            add(col_id);
-            add(col_name);
-            add(col_tip);
-            add(col_plug);
-        }
-        ~PlugInfo() {}
-   
-        Gtk::TreeModelColumn<Glib::ustring> col_id;
-        Gtk::TreeModelColumn<Glib::ustring> col_name;
-        Gtk::TreeModelColumn<Glib::ustring> col_tip;
-        Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
-    };
-    PlugInfo pinfo;
-
-    template <class T>
-    inline std::string to_string(const T& t) {
-        std::stringstream ss;
-        ss << t;
-        return ss.str();
-    }
-
-    std::vector<Glib::ustring> cats;
-    Gtk::VBox topBox;
-    Gtk::HBox buttonBox;
-    Gtk::ComboBoxText comboBox;
-    Gtk::ScrolledWindow scrollWindow;
-    Gtk::Button buttonQuit;
-    Gtk::Button newList;
-    Gtk::ComboBoxText textEntry;
-    Gtk::TreeView treeView;
-    Gtk::TreeModel::Row row ;
-    Gtk::Menu MenuPopup;
-    Gtk::MenuItem menuQuit;
-    int32_t mainwin_x;
-    int32_t mainwin_y;
-    int32_t valid_plugs;
-    int32_t invalid_plugs;
-
-    PresetList pstore;
-    Glib::RefPtr<Gtk::StatusIcon> status_icon;
-    Glib::RefPtr<Gtk::ListStore> listStore;
-    Glib::RefPtr<Gtk::TreeView::Selection> selection;
-    Glib::ustring regex;
-    bool new_world;
-
-    LilvWorld* world;
-    const LilvPlugins* lv2_plugins;
-    LV2_URID_Map map;
-    LV2_Feature map_feature;
-    
-    void get_interpreter();
-    void fill_list();
-    void refill_list();
-    void new_list();
-    void fill_class_list();
-    void systray_menu(guint button, guint32 activate_time);
-    void systray_hide();
-    void show_preset_menu();
-    void button_release_event(GdkEventButton *ev);
-    bool key_release_event(GdkEventKey *ev);
-    
-    virtual void on_combo_changed();
-    virtual void on_entry_changed();
-    virtual void on_button_quit();
-
-    public:
-    Options options;
-
-    LV2PluginList() :
-        buttonQuit("_Quit", true),
-        newList("_Refresh", true),
-        textEntry(true),
-        mainwin_x(-1),
-        mainwin_y(-1),
-        valid_plugs(0),
-        invalid_plugs(0),
-        status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
-        new_world(false) {
-        set_title("LV2 plugs");
-        set_default_size(350,200);
-        get_interpreter();
-
-        listStore = Gtk::ListStore::create(pinfo);
-        treeView.set_model(listStore);
-        treeView.append_column("Name", pinfo.col_name);
-        treeView.set_tooltip_column(2);
-        treeView.set_rules_hint(true);
-        listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
-        fill_list();
-        fill_class_list();
-
-        scrollWindow.add(treeView);
-        scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        scrollWindow.get_vscrollbar()->set_can_focus(true);
-        topBox.pack_start(scrollWindow);
-        topBox.pack_end(buttonBox,Gtk::PACK_SHRINK);
-        buttonBox.pack_start(comboBox,Gtk::PACK_SHRINK);
-        buttonBox.pack_start(textEntry,Gtk::PACK_EXPAND_WIDGET);
-        buttonBox.pack_start(newList,Gtk::PACK_SHRINK);
-        buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
-        add(topBox);
-
-        set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
-        menuQuit.set_label("Quit");
-        MenuPopup.append(menuQuit);
-
-        selection = treeView.get_selection();
-        pstore.selection = selection;
-        treeView.signal_button_release_event().connect_notify(sigc::mem_fun(*this, &LV2PluginList::button_release_event));
-        treeView.signal_key_release_event().connect(sigc::mem_fun(*this, &LV2PluginList::key_release_event));
-        buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
-        newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
-        comboBox.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
-        textEntry.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
-        status_icon->signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::systray_hide));
-        status_icon->signal_popup_menu().connect( sigc::mem_fun(*this, &LV2PluginList::systray_menu));
-        menuQuit.signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
-        show_all();
-        treeView.grab_focus();
-    }
-    ~LV2PluginList() {
-        lilv_world_free(world);
-    }
-};
+///*** ----------- Class LV2PluginList functions ----------- ***///
 
 void LV2PluginList::get_interpreter() {
     if (system(NULL) )
@@ -519,9 +608,16 @@ void LV2PluginList::button_release_event(GdkEventButton *ev) {
 }
 
 bool LV2PluginList::key_release_event(GdkEventKey *ev) {
-    if (ev->keyval == 0xff0d) { // GDK_KEY_Return
+    if (ev->keyval == 0xff0d || ev->keyval == 0x020 ) { // GDK_KEY_Return || GDK_KEY_space
         show_preset_menu();
-    } else if (ev->keyval == 0xff1b) { // GDK_KEY_Escape
+    } else if ((ev->state & GDK_CONTROL_MASK) &&
+           (ev->keyval ==  0x071) || (ev->keyval  ==  0x051)) { // GDK_KEY_q || GDK_KEY_Q
+        on_button_quit();
+    } else if ((ev->state & GDK_CONTROL_MASK) &&
+           (ev->keyval ==  0x072) || (ev->keyval ==  0x052)) { // GDK_KEY_r || GDK_KEY_R 
+        new_list();
+    } else if ((ev->state & GDK_CONTROL_MASK) &&
+           (ev->keyval ==  0x077) || (ev->keyval ==  0x057)) { // GDK_KEY_w || GDK_KEY_W 
         systray_hide();
     }
     return true;
@@ -554,9 +650,15 @@ void LV2PluginList::on_button_quit() {
 int main (int argc , char ** argv) {
     Gtk::Main kit (argc, argv);
     LV2PluginList lv2plugs;
-
-    lv2plugs.options.parse(argc, argv);
+    
+    try {
+        lv2plugs.options.parse(argc, argv);
+    } catch (Glib::OptionError& error) {
+        fprintf(stderr,"%s\n",error.what().c_str()) ;
+    }
+    
     if(lv2plugs.options.hidden) lv2plugs.hide();
+    if(lv2plugs.options.w_high) lv2plugs.resize(1, lv2plugs.options.w_high);
 
     Gtk::Main::run();
     return 0;
