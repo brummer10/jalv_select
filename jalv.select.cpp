@@ -128,6 +128,7 @@ class KeyGrabber {
     bool err;
 
     static void *run_keygrab_thread(void* p);
+    static int my_XErrorHandler(Display * d, XErrorEvent * e);
 
 public:
     LV2PluginList *runner;
@@ -413,22 +414,43 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
     create_preset_menu(id, world);
 }
 
+
+
 ///*** ----------- Class KeyGrabber functions ----------- ***///
+
+int KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e)
+{
+    char buffer1[1024];
+    XGetErrorText(d, e->error_code, buffer1, 1024);
+    fprintf(stderr, "X Error:  %s\n Global HotKey disabled\n", buffer1);
+    return 0;
+}
 
 void KeyGrabber::keygrab() {
     Display* dpy = XOpenDisplay(0);
     XEvent ev;
+    XSetErrorHandler(my_XErrorHandler);
     unsigned int modifiers =  ShiftMask;
     int keycode = XKeysymToKeycode(dpy,XK_Escape);
-    XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
+    try {
+        XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
+    } catch(...) {
+        XFlush(dpy);
+        XCloseDisplay(dpy);
+        stop_keygrab_thread();
+        return;
+    }
     XSelectInput(dpy,DefaultRootWindow(dpy), KeyPressMask);
     while(1) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress)
             Glib::signal_idle().connect_once(
-              sigc::mem_fun(reinterpret_cast<LV2PluginList *>(runner), 
+              sigc::mem_fun(static_cast<LV2PluginList *>(runner), 
               &LV2PluginList::systray_hide));
-    }  
+    }
+    XUngrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy));
+    XFlush(dpy);
+    XCloseDisplay(dpy);
 }
 
 void *KeyGrabber::run_keygrab_thread(void *p) {

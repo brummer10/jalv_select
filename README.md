@@ -10,7 +10,7 @@ Features:
 - select jalv interpreter from combo box,
 - select LV2 plugin from list,
 - select preset to load from menu
-- search plugins by regex or plgin class,
+- search plugins by regex or plugin class,
 - reload lilv world to catch new installed plugins,
 - simple and lightweight in old unix style,
 - load plugin with selected preset.
