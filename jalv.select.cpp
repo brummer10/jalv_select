@@ -435,14 +435,23 @@ KeyGrabber*  KeyGrabber::get_instance() {
 
 int KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e)
 {
-    char buffer1[1024];
-    XGetErrorText(d, e->error_code, buffer1, 1024);
-    fprintf(stderr, "X Error:  %s\n Global HotKey disabled\n", buffer1);
+    static int count = 0;
     KeyGrabber *kg = KeyGrabber::get_instance();
-    XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
-    XFlush(kg->dpy);
-    XCloseDisplay(kg->dpy);
-    kg->stop_keygrab_thread();
+    if (!count) {
+        fprintf(stderr, "X Error: try ControlMask | ShiftMask now \n");
+        XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
+        kg->modifiers =  ControlMask | ShiftMask;
+        XGrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy), 0, GrabModeAsync, GrabModeAsync);
+        count +=1;
+    } else {
+        char buffer1[1024];
+        XGetErrorText(d, e->error_code, buffer1, 1024);
+        fprintf(stderr, "X Error:  %s\n Global HotKey disabled\n", buffer1);
+        XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
+        XFlush(kg->dpy);
+        XCloseDisplay(kg->dpy);
+        kg->stop_keygrab_thread();
+    }
     return 0;
 }
 
@@ -452,6 +461,7 @@ void KeyGrabber::keygrab() {
     modifiers =  ShiftMask;
     keycode = XKeysymToKeycode(dpy,XK_Escape);
     XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
+    XSync(dpy,true);
     XSelectInput(dpy,DefaultRootWindow(dpy), KeyPressMask);
     while(1) {
         XNextEvent(dpy, &ev);
