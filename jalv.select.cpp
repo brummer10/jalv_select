@@ -121,6 +121,11 @@ public:
 class LV2PluginList; // forward declaration (need not be resolved for KeyGrabber definition)
 
 class KeyGrabber {
+private:
+    Display* dpy;
+    XEvent ev;
+    uint32_t modifiers;
+    int32_t keycode;
     pthread_t m_pthr;
     void stop_keygrab_thread();
     void start_keygrab_thread();
@@ -129,16 +134,18 @@ class KeyGrabber {
 
     static void *run_keygrab_thread(void* p);
     static int my_XErrorHandler(Display * d, XErrorEvent * e);
+    static KeyGrabber *instance;
 
-public:
-    LV2PluginList *runner;
-    KeyGrabber() :
-        runner(NULL) {
+    KeyGrabber()  {
         start_keygrab_thread();
     }
     ~KeyGrabber() {
         stop_keygrab_thread();
     }
+
+public:
+    LV2PluginList *runner;
+    static KeyGrabber *get_instance();
 };
 
 ///*** ----------- Class LV2PluginList definition ----------- ***///
@@ -197,7 +204,7 @@ class LV2PluginList : public Gtk::Window {
     const LilvPlugins* lv2_plugins;
     LV2_URID_Map map;
     LV2_Feature map_feature;
-    KeyGrabber kg;
+    KeyGrabber *kg;
     
     void get_interpreter();
     void fill_list();
@@ -230,7 +237,8 @@ class LV2PluginList : public Gtk::Window {
         set_title("LV2 plugs");
         set_default_size(350,200);
         get_interpreter();
-        kg.runner = this;
+        kg = KeyGrabber::get_instance();
+        kg->runner = this;
 
         listStore = Gtk::ListStore::create(pinfo);
         treeView.set_model(listStore);
@@ -418,28 +426,32 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
 
 ///*** ----------- Class KeyGrabber functions ----------- ***///
 
+KeyGrabber*  KeyGrabber::instance = NULL;
+
+KeyGrabber*  KeyGrabber::get_instance() {
+    static KeyGrabber instance;
+    return &instance;
+}
+
 int KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e)
 {
     char buffer1[1024];
     XGetErrorText(d, e->error_code, buffer1, 1024);
     fprintf(stderr, "X Error:  %s\n Global HotKey disabled\n", buffer1);
+    KeyGrabber *kg = KeyGrabber::get_instance();
+    XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
+    XFlush(kg->dpy);
+    XCloseDisplay(kg->dpy);
+    kg->stop_keygrab_thread();
     return 0;
 }
 
 void KeyGrabber::keygrab() {
-    Display* dpy = XOpenDisplay(0);
-    XEvent ev;
+    dpy = XOpenDisplay(0);
     XSetErrorHandler(my_XErrorHandler);
-    unsigned int modifiers =  ShiftMask;
-    int keycode = XKeysymToKeycode(dpy,XK_Escape);
-    try {
-        XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
-    } catch(...) {
-        XFlush(dpy);
-        XCloseDisplay(dpy);
-        stop_keygrab_thread();
-        return;
-    }
+    modifiers =  ShiftMask;
+    keycode = XKeysymToKeycode(dpy,XK_Escape);
+    XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
     XSelectInput(dpy,DefaultRootWindow(dpy), KeyPressMask);
     while(1) {
         XNextEvent(dpy, &ev);
@@ -448,19 +460,17 @@ void KeyGrabber::keygrab() {
               sigc::mem_fun(static_cast<LV2PluginList *>(runner), 
               &LV2PluginList::systray_hide));
     }
-    XUngrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy));
-    XFlush(dpy);
-    XCloseDisplay(dpy);
 }
 
 void *KeyGrabber::run_keygrab_thread(void *p) {
-    (reinterpret_cast<KeyGrabber *>(p))->keygrab();
+    KeyGrabber *kg = KeyGrabber::get_instance();
+    kg->keygrab();
     return NULL;
 }
 
 void KeyGrabber::stop_keygrab_thread() {
-    pthread_cancel (m_pthr);
-    pthread_join (m_pthr, NULL);
+    pthread_cancel(m_pthr);
+    pthread_join(m_pthr, NULL);
 }
 
 void KeyGrabber::start_keygrab_thread() {
@@ -470,8 +480,7 @@ void KeyGrabber::start_keygrab_thread() {
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_attr_setschedpolicy(&attr, SCHED_OTHER);
     pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-    if (pthread_create(&m_pthr, &attr, run_keygrab_thread,
-                       reinterpret_cast<void*>(this))) {
+    if (pthread_create(&m_pthr, &attr, run_keygrab_thread, NULL)) {
         err = true;
     }
     pthread_attr_destroy(&attr);
