@@ -24,10 +24,16 @@
  */
 
 #include <gtkmm.h>
+#include <fcntl.h>
 #include <fstream>
 #include <pthread.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+
+#include <unistd.h> 
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <lilv/lilv.h>
 #include "lv2/lv2plug.in/ns/ext/presets/presets.h"
@@ -105,16 +111,27 @@ public:
         opt_hide.set_short_name('s');
         opt_hide.set_long_name("systray");
         opt_hide.set_description("start minimized in systray");
+
         opt_size.set_short_name('H');
         opt_size.set_long_name("high");
         opt_size.set_description("start with given high in pixel");
         opt_size.set_arg_description("HIGH");
+
         o_group.add_entry(opt_hide, hidden);
         o_group.add_entry(opt_size, w_high);
-       set_main_group(o_group);
+        set_main_group(o_group);
     }
     ~Options() {}
 };
+
+
+template <class T>
+inline std::string to_string(const T& t) {
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
+}
+
 
 ///*** ----------- Class KeyGrabber definition ----------- ***///
 
@@ -134,7 +151,6 @@ private:
 
     static void *run_keygrab_thread(void* p);
     static int my_XErrorHandler(Display * d, XErrorEvent * e);
-    static KeyGrabber *instance;
 
     KeyGrabber()  {
         start_keygrab_thread();
@@ -147,6 +163,34 @@ public:
     LV2PluginList *runner;
     static KeyGrabber *get_instance();
 };
+
+///*** ----------- Class FiFoChannel definition ----------- ***///
+
+class FiFoChannel {
+private:
+    int read_fd;
+    Glib::RefPtr<Glib::IOChannel> iochannel;
+    sigc::connection connect_io;
+    static bool read_fifo(Glib::IOCondition io_condition);
+    int open_fifo();
+    void close_fifo();
+
+    FiFoChannel() {
+        open_fifo();
+    }
+
+    ~FiFoChannel() {
+        close_fifo();
+    }
+
+public:
+    bool is_mine;
+    Glib::ustring own_pid;
+    void write_fifo(Glib::IOCondition io_condition,Glib::ustring buf);
+    LV2PluginList *runner;
+    static FiFoChannel *get_instance();
+};
+
 
 ///*** ----------- Class LV2PluginList definition ----------- ***///
 
@@ -168,13 +212,6 @@ class LV2PluginList : public Gtk::Window {
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
     };
     PlugInfo pinfo;
-
-    template <class T>
-    inline std::string to_string(const T& t) {
-        std::stringstream ss;
-        ss << t;
-        return ss.str();
-    }
 
     std::vector<Glib::ustring> cats;
     Gtk::VBox topBox;
@@ -205,6 +242,7 @@ class LV2PluginList : public Gtk::Window {
     LV2_URID_Map map;
     LV2_Feature map_feature;
     KeyGrabber *kg;
+    FiFoChannel *fc;
     
     void get_interpreter();
     void fill_list();
@@ -223,6 +261,8 @@ class LV2PluginList : public Gtk::Window {
     public:
     Options options;
     void systray_hide();
+    void come_up();
+    void go_down();
 
     LV2PluginList() :
         buttonQuit("_Quit", true),
@@ -237,6 +277,9 @@ class LV2PluginList : public Gtk::Window {
         set_title("LV2 plugs");
         set_default_size(350,200);
         get_interpreter();
+        fc = FiFoChannel::get_instance();
+        fc->runner = this;
+        fc->own_pid = "";
         kg = KeyGrabber::get_instance();
         kg->runner = this;
 
@@ -426,8 +469,6 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
 
 ///*** ----------- Class KeyGrabber functions ----------- ***///
 
-KeyGrabber*  KeyGrabber::instance = NULL;
-
 KeyGrabber*  KeyGrabber::get_instance() {
     static KeyGrabber instance;
     return &instance;
@@ -500,7 +541,7 @@ void KeyGrabber::start_keygrab_thread() {
 
 void LV2PluginList::get_interpreter() {
     if (system(NULL) )
-        system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' >/tmp/jalv.interpreter" );
+      system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' >/tmp/jalv.interpreter" );
     std::ifstream input( "/tmp/jalv.interpreter" );
     int s = 0;
     for( std::string line; getline( input, line ); ) {
@@ -684,14 +725,107 @@ void LV2PluginList::systray_hide() {
     }
 }
 
+void LV2PluginList::come_up() {
+    if (get_window()->get_state()
+     & (Gdk::WINDOW_STATE_ICONIFIED|Gdk::WINDOW_STATE_WITHDRAWN)) {
+        if(!options.hidden)
+            move(mainwin_x, mainwin_y);
+    } else {
+        get_window()->get_root_origin(mainwin_x, mainwin_y);
+    }
+    present();
+}
+
+void LV2PluginList::go_down() {
+    if (get_window()->get_state()
+     & (Gdk::WINDOW_STATE_ICONIFIED|Gdk::WINDOW_STATE_WITHDRAWN)) {
+        return;
+    } else {
+        get_window()->get_root_origin(mainwin_x, mainwin_y);
+    }
+    hide();
+}
+
 void LV2PluginList::on_button_quit() {
     Gtk::Main::quit();
 }
 
+///*** ----------- Class FiFoChannel functions ----------- ***///
+
+FiFoChannel*  FiFoChannel::get_instance() {
+    static FiFoChannel instance;
+    return &instance;
+}
+
+bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
+{
+    FiFoChannel *fc = FiFoChannel::get_instance();
+    if ((io_condition & Glib::IO_IN) == 0) {
+        return false;
+    } else {
+        Glib::ustring buf;
+        fc->iochannel->read_line(buf);
+        if (buf.compare("quit\n") == 0){
+            Gtk::Main::quit ();
+        } else if (buf.compare("exit\n") == 0) {
+            exit(0);
+        } else if (buf.compare("show\n") == 0) {
+            fc->runner->come_up();
+        } else if (buf.compare("hide\n") == 0) {
+            fc->runner->go_down();
+        } else if (buf.find("PID: ") != Glib::ustring::npos) {
+            fc->own_pid +="\n";
+            if(buf.compare(fc->own_pid) != 0)
+                fc->write_fifo(Glib::IO_OUT,"exit");
+            fc->runner->come_up();
+        } else {
+            fprintf(stderr,"jalv.select * Unknown Message\n") ;
+        }
+    }
+    return true;
+}
+
+void FiFoChannel::write_fifo(Glib::IOCondition io_condition, Glib::ustring buf)
+{
+    if ((io_condition & Glib::IO_OUT) == 0) {
+        return;
+    } else {
+        connect_io.disconnect();
+        iochannel->write(buf);
+        iochannel->write("\n");
+        iochannel->flush();
+        connect_io = Glib::signal_io().connect(
+          sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
+    }
+}
+
+int FiFoChannel::open_fifo() {
+    is_mine = false;
+    if (access("jalv.select.fifo", F_OK) == -1) {
+        is_mine = true;
+        if (mkfifo("jalv.select.fifo", 0666) != 0) return -1;
+    }
+    read_fd = open("jalv.select.fifo", O_RDWR | O_NONBLOCK);
+    if (read_fd == -1) return -1;
+    connect_io = Glib::signal_io().connect(
+      sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
+    iochannel = Glib::IOChannel::create_from_fd(read_fd);
+}
+
+void FiFoChannel::close_fifo() {
+    if (is_mine) unlink("jalv.select.fifo");
+}
+
+///*** ----------- main ----------- ***///
+
 int main (int argc , char ** argv) {
     Gtk::Main kit (argc, argv);
     LV2PluginList lv2plugs;
-    
+
+    FiFoChannel *fc = FiFoChannel::get_instance();
+        fc->own_pid = "PID: ";
+        fc->own_pid += to_string(getpid());
+
     try {
         lv2plugs.options.parse(argc, argv);
     } catch (Glib::OptionError& error) {
@@ -700,6 +834,10 @@ int main (int argc , char ** argv) {
     
     if(lv2plugs.options.hidden) lv2plugs.hide();
     if(lv2plugs.options.w_high) lv2plugs.resize(1, lv2plugs.options.w_high);
+
+    if (!fc->is_mine) {
+        fc->write_fifo(Glib::IO_OUT,fc->own_pid);
+    }
 
     Gtk::Main::run();
     return 0;
