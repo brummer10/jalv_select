@@ -610,12 +610,13 @@ void FiFoChannel::write_fifo(Glib::IOCondition io_condition, Glib::ustring buf)
 }
 
 int32_t FiFoChannel::open_fifo() {
+    fifo_name = "/tmp/jalv.select.fifo"+to_string(getuid());
     is_mine = false;
-    if (access("/tmp/jalv.select.fifo", F_OK) == -1) {
+    if (access(fifo_name.c_str(), F_OK) == -1) {
         is_mine = true;
-        if (mkfifo("/tmp/jalv.select.fifo", 0666) != 0) return -1;
+        if (mkfifo(fifo_name.c_str(), 0666) != 0) return -1;
     }
-    read_fd = open("/tmp/jalv.select.fifo", O_RDWR | O_NONBLOCK);
+    read_fd = open(fifo_name.c_str(), O_RDWR | O_NONBLOCK);
     if (read_fd == -1) return -1;
     connect_io = Glib::signal_io().connect(
       sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
@@ -623,7 +624,7 @@ int32_t FiFoChannel::open_fifo() {
 }
 
 void FiFoChannel::close_fifo() {
-    if (is_mine) unlink("/tmp/jalv.select.fifo");
+    if (is_mine) unlink(fifo_name.c_str());
 }
 
 ///*** ----------- main ----------- ***///

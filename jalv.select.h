@@ -23,6 +23,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
+#ifndef JALV_SELECT_H_
+#define JALV_SELECT_H_
+
 #include <gtkmm.h>
 #include <fcntl.h>
 #include <fstream>
@@ -149,6 +153,7 @@ public:
 class FiFoChannel {
 private:
     int32_t read_fd;
+    Glib::ustring fifo_name;
     Glib::RefPtr<Glib::IOChannel> iochannel;
     sigc::connection connect_io;
     static bool read_fifo(Glib::IOCondition io_condition);
@@ -244,3 +249,5 @@ public:
 
     ~LV2PluginList();
 };
+
+#endif
