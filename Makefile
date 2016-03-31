@@ -83,5 +83,5 @@ uninstall :
 	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png
 	@echo ". ." $(BLUE)", done"$(NONE)
 
-$(NAME) : config.h $(OBJECTS)
+$(NAME) : config.h $(OBJECTS) $(NAME).h
 	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDFLAGS) -o $(NAME)
