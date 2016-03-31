@@ -30,6 +30,7 @@
 #include <gtkmm.h>
 #include <fcntl.h>
 #include <fstream>
+
 #include <pthread.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -159,6 +160,7 @@ private:
     static bool read_fifo(Glib::IOCondition io_condition);
     int32_t open_fifo();
     void close_fifo();
+    void re_connect_fifo();
 
     FiFoChannel();
 

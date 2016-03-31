@@ -529,7 +529,7 @@ void LV2PluginList::systray_hide() {
 void LV2PluginList::come_up() {
     if (get_window()->get_state()
      & (Gdk::WINDOW_STATE_ICONIFIED|Gdk::WINDOW_STATE_WITHDRAWN)) {
-        if(!options.hidden)
+        if ((!options.hidden)&&(mainwin_x + mainwin_y >1))
             move(mainwin_x, mainwin_y);
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
@@ -577,6 +577,7 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
         if (buf.compare("quit\n") == 0){
             Gtk::Main::quit ();
         } else if (buf.compare("exit\n") == 0) {
+            fc->is_mine = false;
             exit(0);
         } else if (buf.compare("show\n") == 0) {
             fc->runner->come_up();
@@ -584,15 +585,24 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             fc->runner->go_down();
         } else if (buf.find("PID: ") != Glib::ustring::npos) {
             fc->own_pid +="\n";
-            if(buf.compare(fc->own_pid) != 0)
-                fc->write_fifo(Glib::IO_OUT,"exit");
+            if(buf.compare(fc->own_pid) != 0) {
+                fc->connect_io.disconnect();
+                fc->iochannel->write("exit\n");
+                fc->iochannel->flush();
+                Glib::signal_timeout().connect_once (sigc::mem_fun (fc, &FiFoChannel::re_connect_fifo), 5);
+            }
             fc->runner->come_up();
             fc->is_mine = true;
         } else {
-            fprintf(stderr,"jalv.select * Unknown Message\n") ;
+            fprintf(stderr,"jalv.select * Unknown Message\n % 2d\n", buf.c_str()) ;
         }
     }
     return true;
+}
+
+void FiFoChannel::re_connect_fifo() {
+        connect_io = Glib::signal_io().connect(
+          sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
 }
 
 void FiFoChannel::write_fifo(Glib::IOCondition io_condition, Glib::ustring buf)
@@ -614,7 +624,10 @@ int32_t FiFoChannel::open_fifo() {
     is_mine = false;
     if (access(fifo_name.c_str(), F_OK) == -1) {
         is_mine = true;
-        if (mkfifo(fifo_name.c_str(), 0666) != 0) return -1;
+        if (mkfifo(fifo_name.c_str(), 0666) != 0) {
+            is_mine = false;
+            return -1;
+        }
     }
     read_fd = open(fifo_name.c_str(), O_RDWR | O_NONBLOCK);
     if (read_fd == -1) return -1;
@@ -633,10 +646,6 @@ int32_t main (int32_t argc , char ** argv) {
     Gtk::Main kit (argc, argv);
     LV2PluginList lv2plugs;
 
-    FiFoChannel *fc = FiFoChannel::get_instance();
-        fc->own_pid = "PID: ";
-        fc->own_pid += to_string(getpid());
-
     try {
         lv2plugs.options.parse(argc, argv);
     } catch (Glib::OptionError& error) {
@@ -645,6 +654,10 @@ int32_t main (int32_t argc , char ** argv) {
     
     if(lv2plugs.options.hidden) lv2plugs.hide();
     if(lv2plugs.options.w_high) lv2plugs.resize(1, lv2plugs.options.w_high);
+
+    FiFoChannel *fc = FiFoChannel::get_instance();
+    fc->own_pid = "PID: ";
+    fc->own_pid += to_string(getpid());
 
     if (!fc->is_mine) {
         fc->write_fifo(Glib::IO_OUT,fc->own_pid);
