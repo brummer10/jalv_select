@@ -213,8 +213,7 @@ KeyGrabber*  KeyGrabber::get_instance() {
     return &instance;
 }
 
-int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e)
-{
+int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e) {
     static int32_t count = 0;
     KeyGrabber *kg = KeyGrabber::get_instance();
     if (!count) {
@@ -295,7 +294,6 @@ LV2PluginList::LV2PluginList() :
     get_interpreter();
     fc = FiFoChannel::get_instance();
     fc->runner = this;
-    fc->own_pid = "";
     kg = KeyGrabber::get_instance();
     kg->runner = this;
 
@@ -530,8 +528,8 @@ void LV2PluginList::systray_hide() {
         } else {
             options.hidden = false;
         }
-        treeView.grab_focus();
         present();
+        treeView.grab_focus();
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
         hide();
@@ -546,8 +544,8 @@ void LV2PluginList::come_up() {
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
     }
-    treeView.grab_focus();
     present();
+    treeView.grab_focus();
 }
 
 void LV2PluginList::go_down() {
