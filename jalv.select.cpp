@@ -25,12 +25,23 @@
 
 #include "jalv.select.h"
 
+namespace jalv_select {
+
+
+template <class T>
+inline std::string to_string(const T& t) {
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
+}
+
 
 ///*** ----------- Class Options functions ----------- ***///
 
 Options::Options() :
     o_group("",""),
     hidden(false),
+    version(false),
     w_high(0) {
         opt_hide.set_short_name('s');
         opt_hide.set_long_name("systray");
@@ -41,12 +52,26 @@ Options::Options() :
         opt_size.set_description("start with given high in pixel");
         opt_size.set_arg_description("HIGH");
 
+        opt_version.set_short_name('v');
+        opt_version.set_long_name("version");
+        opt_version.set_description("print version string and exit");
+
         o_group.add_entry(opt_hide, hidden);
         o_group.add_entry(opt_size, w_high);
+        o_group.add_entry(opt_version, version);
         set_main_group(o_group);
     }
 
 Options::~Options() {}
+
+void Options::show_version_and_exit(LV2PluginList *p) {
+    fprintf(stderr, "jalv.select version \033[1;32m %s \n \033[0m" 
+      "    Public Domain @ 2016 by Hermman Meyer\n", VERSION );
+    p->hide();
+    Glib::signal_idle().connect_once(
+      sigc::ptr_fun ( Gtk::Main::quit));
+}
+
 
 ///*** ----------- Class PresetList functions ----------- ***///
 
@@ -197,7 +222,6 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
 }
 
 
-
 ///*** ----------- Class KeyGrabber functions ----------- ***///
 
 KeyGrabber::KeyGrabber()  {
@@ -219,7 +243,7 @@ int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e) {
     if (!count) {
         fprintf(stderr, "X Error: try ControlMask | ShiftMask now \n");
         XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
-        kg->modifiers =  ControlMask | ShiftMask;
+        kg->modifiers = ControlMask | ShiftMask;
         XGrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy),
           0, GrabModeAsync, GrabModeAsync);
         count +=1;
@@ -276,6 +300,7 @@ void KeyGrabber::start_keygrab_thread() {
     }
     pthread_attr_destroy(&attr);
 }
+
 
 ///*** ----------- Class LV2PluginList functions ----------- ***///
 
@@ -562,6 +587,7 @@ void LV2PluginList::on_button_quit() {
     Gtk::Main::quit();
 }
 
+
 ///*** ----------- Class FiFoChannel functions ----------- ***///
 
 FiFoChannel::FiFoChannel() {
@@ -653,11 +679,14 @@ void FiFoChannel::close_fifo() {
     if (is_mine) unlink(fifo_name.c_str());
 }
 
+
+} // end namespace jalv_select
+
 ///*** ----------- main ----------- ***///
 
 int32_t main (int32_t argc , char ** argv) {
     Gtk::Main kit (argc, argv);
-    LV2PluginList lv2plugs;
+    jalv_select::LV2PluginList lv2plugs;
 
     try {
         lv2plugs.options.parse(argc, argv);
@@ -667,10 +696,11 @@ int32_t main (int32_t argc , char ** argv) {
     
     if(lv2plugs.options.hidden) lv2plugs.hide();
     if(lv2plugs.options.w_high) lv2plugs.resize(1, lv2plugs.options.w_high);
+    if(lv2plugs.options.version) lv2plugs.options.show_version_and_exit(&lv2plugs);
 
-    FiFoChannel *fc = FiFoChannel::get_instance();
+    jalv_select::FiFoChannel *fc = jalv_select::FiFoChannel::get_instance();
     fc->own_pid = "PID: ";
-    fc->own_pid += to_string(getpid());
+    fc->own_pid += jalv_select::to_string(getpid());
 
     if (!fc->is_mine) {
         fc->write_fifo(Glib::IO_OUT,fc->own_pid);

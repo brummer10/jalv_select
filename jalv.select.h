@@ -47,6 +47,7 @@
 
 #include "config.h"
 
+namespace jalv_select {
 
 ///*** ----------- Class PresetList definition ----------- ***///
 
@@ -95,15 +96,21 @@ class PresetList {
 };
 
 
+class LV2PluginList; // forward declaration 
+
 ///*** ----------- Class Options definition ----------- ***///
 
 class Options : public Glib::OptionContext {
     Glib::OptionGroup o_group;
     Glib::OptionEntry opt_hide;
     Glib::OptionEntry opt_size;
+    Glib::OptionEntry opt_version;
 public:
     bool hidden;
+    bool version;
     int32_t w_high;
+
+    void show_version_and_exit(LV2PluginList *p);
 
     Options();
 
@@ -112,17 +119,7 @@ public:
 };
 
 
-template <class T>
-inline std::string to_string(const T& t) {
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-}
-
-
 ///*** ----------- Singleton Class KeyGrabber definition ----------- ***///
-
-class LV2PluginList; // forward declaration 
 
 class KeyGrabber {
 private:
@@ -251,6 +248,11 @@ public:
     LV2PluginList();
 
     ~LV2PluginList();
+
 };
 
-#endif
+
+} // end namespace jalv_select
+
+#endif // JALV_SELECT_H_
+
