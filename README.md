@@ -29,15 +29,15 @@ Features:
   echo hide > /tmp/jalv.select.fifo$UID
 ```
 - keyboard shortcuts
-  |   Command         | ==  |   Action                      |
-  | ----------------  |:---:|:----------------------------- |
-  |<ALT>+q or <CTRL>+q|==   |quit|
-  |<ALT>+r or <CTRL>+r|==   |refresh plugin list|
-  |<ESCAPE>           |==   |deselect preset menu|
-  |<CTRL>+w           |==   |hide (minimize to systray icon)|
-  |<ENTER> or <SPACE> |==   |select|
-  |<UP>, <DOWN>       |==   |select plugin in list|
-  |<PG_UP>, <PG_DOWN> |==   |scroll plugin list|
+  |   Command       |     |   Action                      |
+  |-----------------|:---:|-------------------------------|
+  |ALT+q or CTRL+q  |==   |quit                           |
+  |ALT+r or CTRL+r  |==   |refresh plugin list            |
+  |ESCAPE           |==   |deselect preset menu           |
+  |CTRL+w           |==   |hide (minimize to systray icon)|
+  |ENTER or SPACE   |==   |select                         |
+  |UP, DOWN         |==   |select plugin in list          |
+  |PG_UP, PG_DOWN   |==   |scroll plugin list             |
 
 
 Depends:
