@@ -29,6 +29,7 @@ Features:
   echo hide > /tmp/jalv.select.fifo$UID
 ```
 - keyboard shortcuts
+
   |   Command       |     |   Action                      |
   |-----------------|:---:|-------------------------------|
   |ALT+q or CTRL+q  |==   |quit                           |
