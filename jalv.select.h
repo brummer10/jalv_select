@@ -224,7 +224,7 @@ class LV2PluginList : public Gtk::Window {
     LV2_Feature map_feature;
     KeyGrabber *kg;
     FiFoChannel *fc;
-    
+
     void get_interpreter();
     void fill_list();
     void refill_list();
@@ -232,9 +232,11 @@ class LV2PluginList : public Gtk::Window {
     void fill_class_list();
     void systray_menu(guint button, guint32 activate_time);
     void show_preset_menu();
+    void take_focus();
     void button_release_event(GdkEventButton *ev);
     bool key_release_event(GdkEventKey *ev);
-    
+
+
     virtual void on_combo_changed();
     virtual void on_entry_changed();
     virtual void on_button_quit();

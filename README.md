@@ -24,9 +24,10 @@ Features:
 ```
 - command-line runtime options
 ```
-  echo quit > /tmp/jalv.select.fifo$UID
-  echo show > /tmp/jalv.select.fifo$UID
-  echo hide > /tmp/jalv.select.fifo$UID
+  echo 'quit' > /tmp/jalv.select.fifo$UID
+  echo 'show' > /tmp/jalv.select.fifo$UID
+  echo 'hide' > /tmp/jalv.select.fifo$UID
+  echo 'sytray action' > /tmp/jalv.select.fifo$UID
 ```
 - keyboard shortcuts
 

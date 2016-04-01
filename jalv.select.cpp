@@ -367,7 +367,7 @@ LV2PluginList::LV2PluginList() :
     menuQuit.signal_activate().connect(
       sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
     show_all();
-    treeView.grab_focus();
+    take_focus();
 }
 
 LV2PluginList::~LV2PluginList() {
@@ -540,6 +540,12 @@ bool LV2PluginList::key_release_event(GdkEventKey *ev) {
     return true;
 }
 
+void LV2PluginList::take_focus() { 
+    Gtk::TreeModel::iterator iter = selection->get_selected();
+    if(iter) selection->unselect(*iter);
+    treeView.grab_focus();
+}
+
 void LV2PluginList::systray_menu(guint button, guint32 activate_time) {
     MenuPopup.show_all();
     MenuPopup.popup(2, gtk_get_current_event_time());
@@ -554,7 +560,7 @@ void LV2PluginList::systray_hide() {
             options.hidden = false;
         }
         present();
-        treeView.grab_focus();
+        take_focus();
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
         hide();
@@ -570,7 +576,7 @@ void LV2PluginList::come_up() {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
     }
     present();
-    treeView.grab_focus();
+    take_focus();
 }
 
 void LV2PluginList::go_down() {
@@ -622,6 +628,8 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             fc->runner->come_up();
         } else if (buf.compare("hide\n") == 0) {
             fc->runner->go_down();
+        } else if (buf.compare("systray action\n") == 0) {
+            fc->runner->systray_hide();
         } else if (buf.find("PID: ") != Glib::ustring::npos) {
             fc->own_pid +="\n";
             if(buf.compare(fc->own_pid) != 0) {
