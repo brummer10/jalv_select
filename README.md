@@ -4,7 +4,7 @@ jalv.select
 ![Puplic Domain](http://freedomdefined.org/upload/2/20/Pd-button.png)
 
 A little gtkmm GUI to select lv2 plugs from a list
-and run them with jalv. 
+and run them with [jalv](https://drobilla.net/software/jalv/). 
 
 Features:
 - select jalv interpreter from combo box,
@@ -45,6 +45,8 @@ Depends:
 - lilv
 - gtkmm-2.4
 - Xlib
+
+ . . . ofcourse, you need [jalv](https://drobilla.net/software/jalv/)
 
 Install:
 - make
