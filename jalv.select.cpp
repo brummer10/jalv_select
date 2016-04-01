@@ -221,7 +221,8 @@ int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e)
         fprintf(stderr, "X Error: try ControlMask | ShiftMask now \n");
         XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
         kg->modifiers =  ControlMask | ShiftMask;
-        XGrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy), 0, GrabModeAsync, GrabModeAsync);
+        XGrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy),
+          0, GrabModeAsync, GrabModeAsync);
         count +=1;
     } else {
         char buffer1[1024];
@@ -240,7 +241,8 @@ void KeyGrabber::keygrab() {
     XSetErrorHandler(my_XErrorHandler);
     modifiers =  ShiftMask;
     keycode = XKeysymToKeycode(dpy,XK_Escape);
-    XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy), 0, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy, keycode, modifiers, DefaultRootWindow(dpy),
+      0, GrabModeAsync, GrabModeAsync);
     XSync(dpy,true);
     XSelectInput(dpy,DefaultRootWindow(dpy), KeyPressMask);
     while(1) {
@@ -323,15 +325,24 @@ LV2PluginList::LV2PluginList() :
 
     selection = treeView.get_selection();
     pstore.selection = selection;
-    treeView.signal_button_release_event().connect_notify(sigc::mem_fun(*this, &LV2PluginList::button_release_event));
-    treeView.signal_key_release_event().connect(sigc::mem_fun(*this, &LV2PluginList::key_release_event));
-    buttonQuit.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
-    newList.signal_clicked().connect( sigc::mem_fun(*this, &LV2PluginList::new_list));
-    comboBox.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
-    textEntry.signal_changed().connect( sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
-    status_icon->signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::systray_hide));
-    status_icon->signal_popup_menu().connect( sigc::mem_fun(*this, &LV2PluginList::systray_menu));
-    menuQuit.signal_activate().connect( sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
+    treeView.signal_button_release_event().connect_notify(
+      sigc::mem_fun(*this, &LV2PluginList::button_release_event));
+    treeView.signal_key_release_event().connect(
+      sigc::mem_fun(*this, &LV2PluginList::key_release_event));
+    buttonQuit.signal_clicked().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
+    newList.signal_clicked().connect(
+      sigc::mem_fun(*this, &LV2PluginList::new_list));
+    comboBox.signal_changed().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_combo_changed));
+    textEntry.signal_changed().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_entry_changed));
+    status_icon->signal_activate().connect(
+      sigc::mem_fun(*this, &LV2PluginList::systray_hide));
+    status_icon->signal_popup_menu().connect(
+      sigc::mem_fun(*this, &LV2PluginList::systray_menu));
+    menuQuit.signal_activate().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
     show_all();
     treeView.grab_focus();
 }
@@ -519,6 +530,7 @@ void LV2PluginList::systray_hide() {
         } else {
             options.hidden = false;
         }
+        treeView.grab_focus();
         present();
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
@@ -534,6 +546,7 @@ void LV2PluginList::come_up() {
     } else {
         get_window()->get_root_origin(mainwin_x, mainwin_y);
     }
+    treeView.grab_focus();
     present();
 }
 
@@ -578,7 +591,9 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             Gtk::Main::quit ();
         } else if (buf.compare("exit\n") == 0) {
             fc->is_mine = false;
-            exit(0);
+            fc->runner->hide();
+            Glib::signal_idle().connect_once(
+              sigc::ptr_fun ( Gtk::Main::quit));
         } else if (buf.compare("show\n") == 0) {
             fc->runner->come_up();
         } else if (buf.compare("hide\n") == 0) {
@@ -589,7 +604,8 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
                 fc->connect_io.disconnect();
                 fc->iochannel->write("exit\n");
                 fc->iochannel->flush();
-                Glib::signal_timeout().connect_once (sigc::mem_fun (fc, &FiFoChannel::re_connect_fifo), 5);
+                Glib::signal_timeout().connect_once(
+                  sigc::mem_fun (fc, &FiFoChannel::re_connect_fifo), 5);
             }
             fc->runner->come_up();
             fc->is_mine = true;
@@ -601,8 +617,8 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
 }
 
 void FiFoChannel::re_connect_fifo() {
-        connect_io = Glib::signal_io().connect(
-          sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
+    connect_io = Glib::signal_io().connect(
+      sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
 }
 
 void FiFoChannel::write_fifo(Glib::IOCondition io_condition, Glib::ustring buf)
@@ -614,8 +630,7 @@ void FiFoChannel::write_fifo(Glib::IOCondition io_condition, Glib::ustring buf)
         iochannel->write(buf);
         iochannel->write("\n");
         iochannel->flush();
-        connect_io = Glib::signal_io().connect(
-          sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
+        re_connect_fifo();
     }
 }
 

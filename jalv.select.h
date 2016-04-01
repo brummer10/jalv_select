@@ -131,10 +131,10 @@ private:
     uint32_t modifiers;
     int32_t keycode;
     pthread_t m_pthr;
+    bool err;
     void stop_keygrab_thread();
     void start_keygrab_thread();
     void keygrab();
-    bool err;
 
     static void *run_keygrab_thread(void* p);
     static int32_t my_XErrorHandler(Display * d, XErrorEvent * e);
@@ -157,10 +157,11 @@ private:
     Glib::ustring fifo_name;
     Glib::RefPtr<Glib::IOChannel> iochannel;
     sigc::connection connect_io;
-    static bool read_fifo(Glib::IOCondition io_condition);
     int32_t open_fifo();
     void close_fifo();
     void re_connect_fifo();
+
+    static bool read_fifo(Glib::IOCondition io_condition);
 
     FiFoChannel();
 
@@ -169,8 +170,8 @@ private:
 public:
     bool is_mine;
     Glib::ustring own_pid;
-    void write_fifo(Glib::IOCondition io_condition,Glib::ustring buf);
     LV2PluginList *runner;
+    void write_fifo(Glib::IOCondition io_condition,Glib::ustring buf);
     static FiFoChannel *get_instance();
 };
 

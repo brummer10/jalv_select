@@ -11,11 +11,34 @@ Features:
 - select LV2 plugin from list,
 - select preset to load from menu
 - search plugins by regex or plugin class,
-- reload lilv world to catch new installed plugins,
-- simple and lightweight in old unix style,
+- reload lilv world to catch new installed plugins or presets,
 - load plugin with selected preset.
-- minimize to systray (Hotkey SHIFT+ESCAPE)
-- wake up from systray (Hotkey SHIFT+ESCAPE)
+- minimize app to systray (global Hotkey SHIFT+ESCAPE)
+- wake up app from systray (global Hotkey SHIFT+ESCAPE)
+--* left mouse click on systray to show or hide app
+--* right mouse click to show quit menu item
+- command-line start-up options:
+```
+  -s, --systray       start minimized in systray
+  -H, --high=HIGH     start with given high in pixel
+```
+- command-line runtime options
+```
+  echo quit > /tmp/jalv.select.fifo$UID
+  echo show > /tmp/jalv.select.fifo$UID
+  echo hide > /tmp/jalv.select.fifo$UID
+```
+- keyboard shortcuts
+  |   Command         |     |   Action                      |
+  | ----------------  |:---:|:----------------------------- |
+  |<ALT>+q or <CTRL>+q|==   |quit|
+  |<ALT>+r or <CTRL>+r|==   |refresh plugin list|
+  |<ESCAPE>           |==   |deselect preset menu|
+  |<CTRL>+w           |==   |hide (minimize to systray icon)|
+  |<ENTER> or <SPACE> |==   |select|
+  |<UP>, <DOWN>       |==   |select plugin in list|
+  |<PG_UP>, <PG_DOWN> |==   |scroll plugin list|
+
 
 Depends:
 - lilv
