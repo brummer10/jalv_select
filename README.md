@@ -15,8 +15,8 @@ Features:
 - load plugin with selected preset.
 - minimize app to systray (global Hotkey SHIFT+ESCAPE)
 - wake up app from systray (global Hotkey SHIFT+ESCAPE)
---* left mouse click on systray to show or hide app
---* right mouse click to show quit menu item
+ - left mouse click on systray to show or hide app
+ - right mouse click to show quit menu item
 - command-line start-up options:
 ```
   -s, --systray       start minimized in systray
@@ -29,7 +29,7 @@ Features:
   echo hide > /tmp/jalv.select.fifo$UID
 ```
 - keyboard shortcuts
-  |   Command         |     |   Action                      |
+  |   Command         | ==  |   Action                      |
   | ----------------  |:---:|:----------------------------- |
   |<ALT>+q or <CTRL>+q|==   |quit|
   |<ALT>+r or <CTRL>+r|==   |refresh plugin list|
