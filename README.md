@@ -3,7 +3,7 @@ jalv.select
 
 ![Puplic Domain](http://freedomdefined.org/upload/2/20/Pd-button.png)
 
-A little gtkmm GUI to select lv2 plugs from a list
+A little gtkmm GUI to select [lv2](http://lv2plug.in/) plugs from a list
 and run them with [jalv](https://drobilla.net/software/jalv/). 
 
 Features:
@@ -27,7 +27,7 @@ Features:
   echo 'quit' > /tmp/jalv.select.fifo$UID
   echo 'show' > /tmp/jalv.select.fifo$UID
   echo 'hide' > /tmp/jalv.select.fifo$UID
-  echo 'sytray action' > /tmp/jalv.select.fifo$UID
+  echo 'systray action' > /tmp/jalv.select.fifo$UID
 ```
 - keyboard shortcuts
 
