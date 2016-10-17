@@ -393,6 +393,7 @@ void LV2PluginList::get_interpreter() {
 void LV2PluginList::fill_list() {
     valid_plugs = 0;
     invalid_plugs = 0;
+    Glib::ustring invalid = "";
     Glib::ustring tool_tip;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
@@ -415,6 +416,8 @@ void LV2PluginList::fill_list() {
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             valid_plugs++;
         } else {
+            invalid += "\n";
+            invalid += lilv_node_as_string(lilv_plugin_get_uri(plug));
             invalid_plugs++;
             continue;
         }
@@ -434,6 +437,7 @@ void LV2PluginList::fill_list() {
     }
     tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
     tool_tip += to_string(invalid_plugs)+" invalid plugins found";
+    tool_tip += invalid;
     status_icon->set_tooltip_text(tool_tip);
 }
 
@@ -690,11 +694,20 @@ void FiFoChannel::close_fifo() {
 
 } // end namespace jalv_select
 
+// NULL handler for gtk warnings 
+static void null_handler(const char *log_domain, GLogLevelFlags log_level,
+               const gchar *msg, gpointer user_data ) {
+    return ;
+}
+
 ///*** ----------- main ----------- ***///
 
 int32_t main (int32_t argc , char ** argv) {
     Gtk::Main kit (argc, argv);
     jalv_select::LV2PluginList lv2plugs;
+
+    // disable anoing gtk warnings
+    g_log_set_handler("Gtk", G_LOG_LEVEL_WARNING, null_handler, NULL);
 
     try {
         lv2plugs.options.parse(argc, argv);
