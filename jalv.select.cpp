@@ -546,6 +546,9 @@ bool LV2PluginList::key_release_event(GdkEventKey *ev) {
     if (ev->keyval == 0xff0d || ev->keyval == 0x020 ) { // GDK_KEY_Return || GDK_KEY_space
         show_preset_menu();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
+           (ev->keyval ==  0x063) || (ev->keyval ==  0x043)) { // GDK_KEY_c || GDK_KEY_C
+        copy_to_clipboard();
+    } else if ((ev->state & GDK_CONTROL_MASK) &&
            (ev->keyval ==  0x071) || (ev->keyval  ==  0x051)) { // GDK_KEY_q || GDK_KEY_Q
         on_button_quit();
     } else if ((ev->state & GDK_CONTROL_MASK) &&

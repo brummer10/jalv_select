@@ -4,7 +4,7 @@ jalv.select
 ![Puplic Domain](http://freedomdefined.org/upload/2/20/Pd-button.png)
 
 A little gtkmm GUI to select [lv2](http://lv2plug.in/) plugs from a list
-and run them with [jalv](https://drobilla.net/software/jalv/). 
+and run them with [jalv](https://drobilla.net/software/jalv/).
 
 Features:
 - select jalv interpreter from combo box,
@@ -36,6 +36,7 @@ Features:
   |ALT+q or CTRL+q  |==   |quit                           |
   |ALT+r or CTRL+r  |==   |refresh plugin list            |
   |ESCAPE           |==   |deselect preset menu           |
+  |CTRL+c or RMB    |==   |copy plugin URI to clipboard   |
   |CTRL+w           |==   |hide (minimize to systray icon)|
   |ENTER or SPACE   |==   |select                         |
   |UP, DOWN         |==   |select plugin in list          |
