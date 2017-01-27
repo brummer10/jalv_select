@@ -527,7 +527,7 @@ void LV2PluginList::copy_to_clipboard() {
     if(iter) {  
         Gtk::TreeModel::Row row = *iter;
         const LilvPlugin* plug = row[pinfo.col_plug];
-        Glib::ustring id = " " + row[pinfo.col_id];
+        Glib::ustring id = row[pinfo.col_id];
         Glib::RefPtr<Gtk::Clipboard> clipboard = Gtk::Clipboard::get();
         clipboard->set_text(id.c_str());
         clipboard->set_can_store();
