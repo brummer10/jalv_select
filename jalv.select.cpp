@@ -522,9 +522,23 @@ void LV2PluginList::show_preset_menu() {
     }
 }
 
+void LV2PluginList::copy_to_clipboard() {
+    Gtk::TreeModel::iterator iter = selection->get_selected();
+    if(iter) {  
+        Gtk::TreeModel::Row row = *iter;
+        const LilvPlugin* plug = row[pinfo.col_plug];
+        Glib::ustring id = " " + row[pinfo.col_id];
+        Glib::RefPtr<Gtk::Clipboard> clipboard = Gtk::Clipboard::get();
+        clipboard->set_text(id.c_str());
+        clipboard->set_can_store();
+    }
+}
+
 void LV2PluginList::button_release_event(GdkEventButton *ev) {
     if (ev->type == GDK_BUTTON_RELEASE && ev->button == 1) {
         show_preset_menu();
+    } else if (ev->type == GDK_BUTTON_RELEASE && ev->button == 3) {
+        copy_to_clipboard();
     }
 }
 
