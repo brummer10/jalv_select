@@ -6,6 +6,10 @@ jalv.select
 A little gtkmm GUI to select [lv2](http://lv2plug.in/) plugs from a list
 and run them with [jalv](https://drobilla.net/software/jalv/).
 
+<p><p\>
+
+![jalvselect](https://github.com/brummer10/jalv_select/raw/master/jalv.select.png)
+
 Features:
 - select jalv interpreter from combo box,
 - select LV2 plugin from list,
@@ -54,7 +58,3 @@ Install:
 - make
 - make install
 - see makefile for more options, eg. build debian package
-
-<p><p\>
-
-![jalvselect](https://github.com/brummer10/jalv_select/raw/master/jalv.select.png)
