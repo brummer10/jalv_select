@@ -56,4 +56,4 @@ Install:
 - see makefile for more options, eg. build debian package
 
 <p><p\>
-![Alternativer Text](http://i60.tinypic.com/33k42ut.png)
+![jalv.select.png](https://github.com/brummer10/jalv_select/raw/master/jalv.select.png)
