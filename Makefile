@@ -5,14 +5,15 @@
 	SHARE_DIR = $(PREFIX)/share
 	DESKAPPS_DIR = $(SHARE_DIR)/applications
 	PIXMAPS_DIR = $(SHARE_DIR)/pixmaps
+	MAN_DIR = $(SHARE_DIR)/man/man1
 
 	# set name
 	NAME = jalv.select
 	VER = 0.7
 	# create debian package
 	DEBNAME = jalvselect_$(VER)
-	CREATEDEB = yes '' | dh_make -s -n -e $(USER)@org -p $(DEBNAME) -c gpl >/dev/null
-	DIRS = $(BIN_DIR)  $(DESKAPPS_DIR)  $(PIXMAPS_DIR) 
+	CREATEDEB = dh_make -y -s -n -e $(USER)@org -p $(DEBNAME) -c gpl >/dev/null
+	DIRS = $(BIN_DIR)  $(DESKAPPS_DIR)  $(PIXMAPS_DIR)  $(MAN_DIR)
 	BUILDDEB = dpkg-buildpackage -rfakeroot -b 2>/dev/null | grep dpkg-deb 
 	# set compile flags
 	CXXFLAGS = -std=c++11 `pkg-config gtkmm-2.4 lilv-0 --cflags` 
@@ -56,10 +57,15 @@ install : all
 	@mkdir -p $(DESTDIR)$(BIN_DIR)
 	@mkdir -p $(DESTDIR)$(DESKAPPS_DIR)
 	@mkdir -p $(DESTDIR)$(PIXMAPS_DIR)
+	@mkdir -p $(DESTDIR)$(MAN_DIR)
 	install $(NAME) $(DESTDIR)$(BIN_DIR)
-	install $(NAME).desktop $(DESTDIR)$(DESKAPPS_DIR)
-	install lv2.png $(DESTDIR)$(PIXMAPS_DIR)
-	install lv2_16.png $(DESTDIR)$(PIXMAPS_DIR)
+	cp $(NAME).desktop $(DESTDIR)$(DESKAPPS_DIR)
+	cp lv2.png $(DESTDIR)$(PIXMAPS_DIR)
+	cp lv2_16.png $(DESTDIR)$(PIXMAPS_DIR)
+	cp jalv.select.1 $(DESTDIR)$(MAN_DIR)
+	cp jalv.select.fr.1 $(DESTDIR)$(MAN_DIR)
+	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.1
+	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
 	@echo ". ." $(BLUE)", done"$(NONE)
 
     #@create tar ball
@@ -80,7 +86,7 @@ deb :
      echo -e $(RED)"sorry, build fail"$(NONE); fi
 
 uninstall :
-	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png
+	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png $(MAN_DIR)/jalv.select.1.gz $(MAN_DIR)/jalv.select.fr.1.gz
 	@echo ". ." $(BLUE)", done"$(NONE)
 
 $(NAME) : config.h $(OBJECTS) $(NAME).h

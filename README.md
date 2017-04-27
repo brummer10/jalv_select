@@ -56,5 +56,10 @@ Depends:
 
 Install:
 - make
-- make install
-- see makefile for more options, eg. build debian package
+- (sudo) make install
+- see makefile for more options
+
+Debian:
+- make deb
+- dpkg-buildpackage -rfakeroot -uc -us -b
+
