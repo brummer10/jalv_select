@@ -212,6 +212,7 @@ class LV2PluginList : public Gtk::Window {
     int32_t invalid_plugs;
 
     PresetList pstore;
+    Glib::ustring tool_tip;
     Glib::RefPtr<Gtk::StatusIcon> status_icon;
     Glib::RefPtr<Gtk::ListStore> listStore;
     Glib::RefPtr<Gtk::TreeView::Selection> selection;

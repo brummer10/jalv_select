@@ -312,7 +312,8 @@ LV2PluginList::LV2PluginList() :
     mainwin_y(-1),
     valid_plugs(0),
     invalid_plugs(0),
-    status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
+    tool_tip(" "),
+    //status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
     new_world(false) {
     set_title("LV2 plugs");
     set_default_size(350,200);
@@ -345,6 +346,8 @@ LV2PluginList::LV2PluginList() :
     set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
     menuQuit.set_label("Quit");
     MenuPopup.append(menuQuit);
+    status_icon = Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png");
+    status_icon->set_tooltip_text(tool_tip);
 
     selection = treeView.get_selection();
     pstore.selection = selection;
@@ -394,7 +397,6 @@ void LV2PluginList::fill_list() {
     valid_plugs = 0;
     invalid_plugs = 0;
     Glib::ustring invalid = "";
-    Glib::ustring tool_tip;
     Glib::ustring tip;
     Glib::ustring tipby = " \nby ";
     world = lilv_world_new();
@@ -438,7 +440,7 @@ void LV2PluginList::fill_list() {
     tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
     tool_tip += to_string(invalid_plugs)+" invalid plugins found";
     tool_tip += invalid;
-    status_icon->set_tooltip_text(tool_tip);
+    if (status_icon) status_icon->set_tooltip_text(tool_tip);
 }
 
 void LV2PluginList::refill_list() {
