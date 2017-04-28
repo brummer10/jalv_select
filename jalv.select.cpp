@@ -447,6 +447,7 @@ void LV2PluginList::refill_list() {
     Glib::ustring name;
     Glib::ustring name_search;
     Glib::ustring tip;
+    Glib::ustring tip1;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
     LilvIter* it = lilv_plugins_begin(lv2_plugins);
@@ -460,8 +461,8 @@ void LV2PluginList::refill_list() {
             name = lilv_node_as_string(nd);
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
-            tip += lilv_node_as_string(lilv_plugin_get_uri(plug));
-            name_search = name+tip;
+            tip1 = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            name_search = name+tip+tip1;
         } else {
             continue;
         }
