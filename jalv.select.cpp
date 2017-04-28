@@ -460,6 +460,7 @@ void LV2PluginList::refill_list() {
             name = lilv_node_as_string(nd);
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
+            tip += lilv_node_as_string(lilv_plugin_get_uri(plug));
             name_search = name+tip;
         } else {
             continue;
