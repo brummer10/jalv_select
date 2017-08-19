@@ -403,10 +403,10 @@ void LV2PluginList::fill_list() {
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
     LilvNode* nd = NULL;
-    LilvIter* it = lilv_plugins_begin(lv2_plugins);
 
-    for (it; !lilv_plugins_is_end(lv2_plugins, it);
-    it = lilv_plugins_next(lv2_plugins, it)) {
+    for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
+      !lilv_plugins_is_end(lv2_plugins, it);
+      it = lilv_plugins_next(lv2_plugins, it)) {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
         if (plug) {
             nd = lilv_plugin_get_name(plug);
@@ -450,9 +450,10 @@ void LV2PluginList::refill_list() {
     Glib::ustring tip1;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
-    LilvIter* it = lilv_plugins_begin(lv2_plugins);
-    for (it; !lilv_plugins_is_end(lv2_plugins, it);
-    it = lilv_plugins_next(lv2_plugins, it)) {
+
+    for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
+      !lilv_plugins_is_end(lv2_plugins, it);
+      it = lilv_plugins_next(lv2_plugins, it)) {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
         if (plug) {
             nd = lilv_plugin_get_name(plug);
