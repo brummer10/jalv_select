@@ -550,16 +550,16 @@ bool LV2PluginList::key_release_event(GdkEventKey *ev) {
     if (ev->keyval == 0xff0d || ev->keyval == 0x020 ) { // GDK_KEY_Return || GDK_KEY_space
         show_preset_menu();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
-           (ev->keyval ==  0x063) || (ev->keyval ==  0x043)) { // GDK_KEY_c || GDK_KEY_C
+           ((ev->keyval ==  0x063) || (ev->keyval ==  0x043))) { // GDK_KEY_c || GDK_KEY_C
         copy_to_clipboard();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
-           (ev->keyval ==  0x071) || (ev->keyval  ==  0x051)) { // GDK_KEY_q || GDK_KEY_Q
+           ((ev->keyval ==  0x071) || (ev->keyval  ==  0x051))) { // GDK_KEY_q || GDK_KEY_Q
         on_button_quit();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
-           (ev->keyval ==  0x072) || (ev->keyval ==  0x052)) { // GDK_KEY_r || GDK_KEY_R 
+           ((ev->keyval ==  0x072) || (ev->keyval ==  0x052))) { // GDK_KEY_r || GDK_KEY_R 
         new_list();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
-           (ev->keyval ==  0x077) || (ev->keyval ==  0x057)) { // GDK_KEY_w || GDK_KEY_W 
+           ((ev->keyval ==  0x077) || (ev->keyval ==  0x057))) { // GDK_KEY_w || GDK_KEY_W 
         systray_hide();
     }
     return true;
@@ -667,7 +667,7 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             fc->runner->come_up();
             fc->is_mine = true;
         } else {
-            fprintf(stderr,"jalv.select * Unknown Message\n % 2d\n", buf.c_str()) ;
+            fprintf(stderr,"jalv.select * Unknown Message\n % 2s\n", buf.c_str()) ;
         }
     }
     return true;
@@ -706,6 +706,7 @@ int32_t FiFoChannel::open_fifo() {
     connect_io = Glib::signal_io().connect(
       sigc::ptr_fun(read_fifo), read_fd, Glib::IO_IN);
     iochannel = Glib::IOChannel::create_from_fd(read_fd);
+    return 0;
 }
 
 void FiFoChannel::close_fifo() {
