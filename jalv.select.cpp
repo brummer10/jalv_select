@@ -668,7 +668,7 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             fc->runner->come_up();
             fc->is_mine = true;
         } else {
-            fprintf(stderr,"jalv.select * Unknown Message\n % 2s\n", buf.c_str()) ;
+            fprintf(stderr,"jalv.select * Unknown Message\n %2s\n", buf.c_str()) ;
         }
     }
     return true;
