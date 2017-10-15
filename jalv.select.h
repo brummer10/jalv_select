@@ -184,6 +184,7 @@ class LV2PluginList : public Gtk::Window {
             add(col_name);
             add(col_tip);
             add(col_plug);
+            add(col_fav);
         }
         ~PlugInfo() {}
    
@@ -191,19 +192,22 @@ class LV2PluginList : public Gtk::Window {
         Gtk::TreeModelColumn<Glib::ustring> col_name;
         Gtk::TreeModelColumn<Glib::ustring> col_tip;
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
+        Gtk::TreeModelColumn<bool> col_fav;
     };
     PlugInfo pinfo;
 
     std::vector<Glib::ustring> cats;
+    std::vector<Glib::ustring> favs;
     Gtk::VBox topBox;
     Gtk::HBox buttonBox;
     Gtk::ComboBoxText comboBox;
     Gtk::ScrolledWindow scrollWindow;
     Gtk::Button buttonQuit;
+    Gtk::ToggleButton fav;
     Gtk::Button newList;
     Gtk::ComboBoxText textEntry;
     Gtk::TreeView treeView;
-    Gtk::TreeModel::Row row ;
+    Gtk::TreeModel::Row row;
     Gtk::Menu MenuPopup;
     Gtk::MenuItem menuQuit;
     int32_t mainwin_x;
@@ -215,6 +219,7 @@ class LV2PluginList : public Gtk::Window {
     Glib::ustring tool_tip;
     Glib::RefPtr<Gtk::StatusIcon> status_icon;
     Glib::RefPtr<Gtk::ListStore> listStore;
+    Glib::RefPtr<Gtk::ListStore> favStore;
     Glib::RefPtr<Gtk::TreeView::Selection> selection;
     Glib::ustring regex;
     bool new_world;
@@ -237,10 +242,16 @@ class LV2PluginList : public Gtk::Window {
     void take_focus();
     void button_release_event(GdkEventButton *ev);
     bool key_release_event(GdkEventKey *ev);
-
+    void on_fav_toggle(Glib::ustring path);
+    void read_fav_list();
+    bool is_fav(Glib::ustring id);
+    bool fav_changed;
+    void save_fav_list();
+    Glib::ustring config_file;
 
     virtual void on_combo_changed();
     virtual void on_entry_changed();
+    virtual void on_fav_button();
     virtual void on_button_quit();
 
 public:

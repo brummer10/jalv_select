@@ -307,12 +307,15 @@ void KeyGrabber::start_keygrab_thread() {
 LV2PluginList::LV2PluginList() :
     buttonQuit("_Quit", true),
     newList("_Refresh", true),
+    fav("_Fav.", true),
     textEntry(true),
     mainwin_x(-1),
     mainwin_y(-1),
     valid_plugs(0),
     invalid_plugs(0),
     tool_tip(" "),
+    fav_changed(false),
+    config_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.conf")),
     //status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
     new_world(false) {
     set_title("LV2 plugs");
@@ -326,12 +329,25 @@ LV2PluginList::LV2PluginList() :
     listStore = Gtk::ListStore::create(pinfo);
     treeView.set_model(listStore);
     treeView.append_column("Name", pinfo.col_name);
+    treeView.append_column_editable("Favorit", pinfo.col_fav);
+    treeView.get_column(0)->set_min_width(360);
+    treeView.get_column(1)->set_max_width(60);
+    Gtk::TreeViewColumn *col = treeView.get_column(1);
+    Gtk::CellRendererToggle *cell = dynamic_cast<Gtk::CellRendererToggle*>(col->get_first_cell_renderer());
     treeView.set_tooltip_column(2);
     treeView.set_rules_hint(true);
+    treeView.set_name("lv2_treeview" );
     listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
+    read_fav_list();
     fill_list();
     fill_class_list();
-
+    Gtk::RC::parse_string(
+        "style 'treestyle'{ \n"
+           " GtkTreeView::odd-row-color = 'gray94' \n"
+           " GtkTreeView::even-row-color = 'gray100' \n"
+           " GtkTreeView::allow-rules = 1 \n"
+       " } \n"
+       " widget '*lv2_treeview*' style 'treestyle' \n");
     scrollWindow.add(treeView);
     scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     scrollWindow.get_vscrollbar()->set_can_focus(true);
@@ -340,6 +356,7 @@ LV2PluginList::LV2PluginList() :
     buttonBox.pack_start(comboBox,Gtk::PACK_SHRINK);
     buttonBox.pack_start(textEntry,Gtk::PACK_EXPAND_WIDGET);
     buttonBox.pack_start(newList,Gtk::PACK_SHRINK);
+    buttonBox.pack_start(fav,Gtk::PACK_SHRINK);
     buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
     add(topBox);
 
@@ -351,12 +368,16 @@ LV2PluginList::LV2PluginList() :
 
     selection = treeView.get_selection();
     pstore.selection = selection;
+    cell->signal_toggled().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_fav_toggle));
     treeView.signal_button_release_event().connect_notify(
       sigc::mem_fun(*this, &LV2PluginList::button_release_event));
     treeView.signal_key_release_event().connect(
       sigc::mem_fun(*this, &LV2PluginList::key_release_event));
     buttonQuit.signal_clicked().connect(
       sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
+    fav.signal_toggled().connect(
+      sigc::mem_fun(*this, &LV2PluginList::on_fav_button));
     newList.signal_clicked().connect(
       sigc::mem_fun(*this, &LV2PluginList::new_list));
     comboBox.signal_changed().connect(
@@ -393,6 +414,119 @@ void LV2PluginList::get_interpreter() {
     pstore.interpret = comboBox.get_active_text(); 
 }
 
+void LV2PluginList::read_fav_list() {
+    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_file);
+    if (!file) return;
+    if (file->query_exists()) {
+        Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
+        std::string line;
+        while (in->read_line(line)) {
+            favs.push_back(line);
+        }
+        in->close();
+    }
+}
+
+void LV2PluginList::save_fav_list() {
+    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_file);
+    if (!file) return;
+    Glib::RefPtr<Gio::DataOutputStream> out = Gio::DataOutputStream::create(file->replace());
+    typedef Gtk::TreeModel::Children type_children;
+    type_children children = listStore->children();
+    Glib::ustring id;
+    for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
+        id += (*it);
+        id += "\n";
+    }
+    out->put_string(id);
+    out->flush ();
+    out->close ();
+}
+
+bool LV2PluginList::is_fav(Glib::ustring id) {
+    for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
+        if (id.compare(*it)==0) return true;
+    }
+    return false;
+}
+
+void LV2PluginList::on_fav_toggle(Glib::ustring path) {
+    if(path.empty()) return;
+    auto row = *listStore->get_iter(Gtk::TreeModel::Path(path));
+    if(row[pinfo.col_fav] == true) {
+        Glib::ustring id = row[pinfo.col_id];
+        if (id.empty()) return;
+        for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
+            if (id.compare(*it)==0) return;
+        }
+        favs.push_back(id);
+    } else {
+        Glib::ustring id = row[pinfo.col_id];
+        if (id.empty()) return;
+        for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
+            if (id.compare(*it)==0) {
+                favs.erase(it);
+                break;
+            }
+        }
+    }
+    fav_changed = true;
+    if (fav.get_active()) on_fav_button();
+}
+
+void LV2PluginList::on_fav_button() {
+    Glib::ustring name;
+    Glib::ustring tip;
+    Glib::ustring id;
+    bool found = false;
+    Glib::ustring tipby = " \nby ";
+    LilvNode* nd;
+    listStore->clear();
+    for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
+      !lilv_plugins_is_end(lv2_plugins, it);
+      it = lilv_plugins_next(lv2_plugins, it)) {
+        found = false;
+        const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
+        if (plug) {
+            nd = lilv_plugin_get_name(plug);
+        }
+        if (nd) {
+            name = lilv_node_as_string(nd);
+            const LilvPluginClass* cls = lilv_plugin_get_class(plug);
+            tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
+            id = lilv_node_as_string(lilv_plugin_get_uri(plug));
+        } else {
+           continue;
+        }
+        lilv_node_free(nd);
+        if (fav.get_active()) {
+            for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
+                if (id.compare(*it)==0) found = true;
+            }
+            fav.set_label(" _All ");
+        } else {
+            found = true;
+            fav.set_label("_Fav.");
+        }
+        if (found){
+            row = *(listStore->append());
+            row[pinfo.col_plug] = plug;
+            row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            row[pinfo.col_name] = name;
+            row[pinfo.col_fav] = is_fav(lilv_node_as_string(lilv_plugin_get_uri(plug)));
+            nd = lilv_plugin_get_author_name(plug);
+            if (!nd) {
+                nd = lilv_plugin_get_project(plug);
+            }
+            if (nd) {
+                tip += tipby + lilv_node_as_string(nd);
+            }
+            lilv_node_free(nd);
+            row[pinfo.col_tip] = tip;
+        } 
+    }
+}
+
 void LV2PluginList::fill_list() {
     valid_plugs = 0;
     invalid_plugs = 0;
@@ -416,6 +550,7 @@ void LV2PluginList::fill_list() {
             row[pinfo.col_name] = lilv_node_as_string(nd);
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            row[pinfo.col_fav] = is_fav(lilv_node_as_string(lilv_plugin_get_uri(plug)));
             valid_plugs++;
         } else {
             invalid += "\n";
@@ -474,6 +609,7 @@ void LV2PluginList::refill_list() {
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             row[pinfo.col_name] = name;
+            row[pinfo.col_fav] = is_fav(lilv_node_as_string(lilv_plugin_get_uri(plug)));
             nd = lilv_plugin_get_author_name(plug);
             if (!nd) {
                 nd = lilv_plugin_get_project(plug);
@@ -508,6 +644,7 @@ void LV2PluginList::on_entry_changed() {
         regex = textEntry.get_entry()->get_text();
         listStore->clear();
         refill_list();
+        if (fav.get_active()) on_fav_button();
     } else {
         new_world = false;
     }
@@ -541,7 +678,10 @@ void LV2PluginList::copy_to_clipboard() {
 
 void LV2PluginList::button_release_event(GdkEventButton *ev) {
     if (ev->type == GDK_BUTTON_RELEASE && ev->button == 1) {
-        show_preset_menu();
+        Gtk::TreeModel::Path path;
+        Gtk::TreeViewColumn* col;
+        treeView.get_cursor(path, col);
+        if ( col == treeView.get_column(0)) show_preset_menu();
     } else if (ev->type == GDK_BUTTON_RELEASE && ev->button == 3) {
         copy_to_clipboard();
     }
@@ -549,7 +689,10 @@ void LV2PluginList::button_release_event(GdkEventButton *ev) {
 
 bool LV2PluginList::key_release_event(GdkEventKey *ev) {
     if (ev->keyval == 0xff0d || ev->keyval == 0x020 ) { // GDK_KEY_Return || GDK_KEY_space
-        show_preset_menu();
+        Gtk::TreeModel::Path path;
+        Gtk::TreeViewColumn* col;
+        treeView.get_cursor(path, col);
+        if ( col == treeView.get_column(0)) show_preset_menu();
     } else if ((ev->state & GDK_CONTROL_MASK) &&
            ((ev->keyval ==  0x063) || (ev->keyval ==  0x043))) { // GDK_KEY_c || GDK_KEY_C
         copy_to_clipboard();
@@ -616,6 +759,7 @@ void LV2PluginList::go_down() {
 }
 
 void LV2PluginList::on_button_quit() {
+    if (fav_changed) save_fav_list();
     Gtk::Main::quit();
 }
 
