@@ -329,7 +329,7 @@ LV2PluginList::LV2PluginList() :
     listStore = Gtk::ListStore::create(pinfo);
     treeView.set_model(listStore);
     treeView.append_column("Name", pinfo.col_name);
-    treeView.append_column_editable("Favorit", pinfo.col_fav);
+    treeView.append_column_editable("Favorite", pinfo.col_fav);
     treeView.get_column(0)->set_min_width(360);
     treeView.get_column(1)->set_max_width(60);
     Gtk::TreeViewColumn *col = treeView.get_column(1);
