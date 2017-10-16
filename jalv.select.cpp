@@ -316,7 +316,6 @@ LV2PluginList::LV2PluginList() :
     tool_tip(" "),
     fav_changed(false),
     config_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.conf")),
-    //status_icon(Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png")),
     new_world(false) {
     set_title("LV2 plugs");
     set_default_size(350,200);
@@ -332,10 +331,13 @@ LV2PluginList::LV2PluginList() :
     treeView.append_column_editable("Favorite", pinfo.col_fav);
     treeView.get_column(0)->set_min_width(360);
     treeView.get_column(1)->set_max_width(60);
-    Gtk::TreeViewColumn *col = treeView.get_column(1);
-    Gtk::CellRendererToggle *cell = dynamic_cast<Gtk::CellRendererToggle*>(col->get_first_cell_renderer());
+    treeView.get_column(0)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    treeView.get_column(1)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    Gtk::CellRendererToggle *cell = dynamic_cast<Gtk::CellRendererToggle*>(
+      treeView.get_column(1)->get_first_cell_renderer());
     treeView.set_tooltip_column(2);
     treeView.set_rules_hint(true);
+    treeView.set_fixed_height_mode(true);
     treeView.set_name("lv2_treeview" );
     listStore->set_sort_column(pinfo.col_name, Gtk::SORT_ASCENDING );
     read_fav_list();
@@ -503,10 +505,8 @@ void LV2PluginList::on_fav_button() {
             for (std::vector<Glib::ustring>::iterator it = favs.begin() ; it != favs.end(); ++it) {
                 if (id.compare(*it)==0) found = true;
             }
-            fav.set_label(" _All ");
         } else {
             found = true;
-            fav.set_label("_Fav.");
         }
         if (found){
             row = *(listStore->append());
@@ -525,6 +525,8 @@ void LV2PluginList::on_fav_button() {
             row[pinfo.col_tip] = tip;
         } 
     }
+    if (fav.get_active()) fav.set_label(" _All ");
+    else fav.set_label("_Fav.");
 }
 
 void LV2PluginList::fill_list() {
@@ -576,6 +578,7 @@ void LV2PluginList::fill_list() {
     tool_tip += to_string(invalid_plugs)+" invalid plugins found";
     tool_tip += invalid;
     if (status_icon) status_icon->set_tooltip_text(tool_tip);
+    if (fav.get_active()) on_fav_button();
 }
 
 void LV2PluginList::refill_list() {
