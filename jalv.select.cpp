@@ -577,11 +577,15 @@ void LV2PluginList::fill_list() {
              tip += tipby + lilv_node_as_string(nd);
         }
       int num_inputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_InputPort, 0);
-      tip += "\n\nAudio Input Ports:" ;
-      tip += to_string(num_inputs);
+      if(num_inputs !=0) {
+        tip += "\n\nAudio Input Ports:" ;
+        tip += to_string(num_inputs);
+      }
       int num_outputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_OutputPort, 0);
-      tip += "\nAudio Output Ports:" ;
-      tip += to_string(num_outputs);
+      if(num_outputs !=0) {
+        tip += "\nAudio Output Ports:" ;
+        tip += to_string(num_outputs);
+      }
       lilv_node_free(nd);
         row[pinfo.col_tip] = tip;
     }
@@ -602,6 +606,10 @@ void LV2PluginList::refill_list() {
     Glib::ustring tip1;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
+
+    LilvNode* lv2_AudioPort = (lilv_new_uri(world, LV2_CORE__AudioPort));
+    LilvNode* lv2_InputPort = (lilv_new_uri(world, LV2_CORE__InputPort));
+    LilvNode* lv2_OutputPort = (lilv_new_uri(world, LV2_CORE__OutputPort));
 
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
       !lilv_plugins_is_end(lv2_plugins, it);
@@ -633,6 +641,16 @@ void LV2PluginList::refill_list() {
             }
             if (nd) {
                 tip += tipby + lilv_node_as_string(nd);
+            }
+            int num_inputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_InputPort, 0);
+            if(num_inputs !=0) {
+              tip += "\n\nAudio Input Ports:" ;
+              tip += to_string(num_inputs);
+            }
+            int num_outputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_OutputPort, 0);
+            if(num_outputs !=0) {
+              tip += "\nAudio Output Ports:" ;
+              tip += to_string(num_outputs);
             }
             lilv_node_free(nd);
             row[pinfo.col_tip] = tip;
