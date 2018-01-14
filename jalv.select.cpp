@@ -540,6 +540,11 @@ void LV2PluginList::fill_list() {
     lv2_plugins = lilv_world_get_all_plugins(world);        
     LilvNode* nd = NULL;
 
+    LilvNode* lv2_AudioPort = (lilv_new_uri(world, LV2_CORE__AudioPort));
+    LilvNode* lv2_InputPort = (lilv_new_uri(world, LV2_CORE__InputPort));
+    LilvNode* lv2_OutputPort = (lilv_new_uri(world, LV2_CORE__OutputPort));
+
+
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
       !lilv_plugins_is_end(lv2_plugins, it);
       it = lilv_plugins_next(lv2_plugins, it)) {
@@ -571,9 +576,18 @@ void LV2PluginList::fill_list() {
         if (nd) {
              tip += tipby + lilv_node_as_string(nd);
         }
-        lilv_node_free(nd);
+      int num_inputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_InputPort, 0);
+      tip += "\n\nAudio Input Ports:" ;
+      tip += to_string(num_inputs);
+      int num_outputs = lilv_plugin_get_num_ports_of_class(plug, lv2_AudioPort, lv2_OutputPort, 0);
+      tip += "\nAudio Output Ports:" ;
+      tip += to_string(num_outputs);
+      lilv_node_free(nd);
         row[pinfo.col_tip] = tip;
     }
+    lilv_node_free(lv2_AudioPort);
+    lilv_node_free(lv2_InputPort);
+    lilv_node_free(lv2_OutputPort);
     tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
     tool_tip += to_string(invalid_plugs)+" invalid plugins found";
     tool_tip += invalid;
