@@ -9,7 +9,7 @@
 
 	# set name
 	NAME = jalv.select
-	VER = 0.9
+	VER = 1.0
 	# create debian package
 	DEBNAME = jalvselect_$(VER)
 	CREATEDEB = dh_make -y -s -n -e $(USER)@org -p $(DEBNAME) -c gpl >/dev/null
