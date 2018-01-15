@@ -476,6 +476,68 @@ void LV2PluginList::on_fav_toggle(Glib::ustring path) {
     if (fav.get_active()) on_fav_button();
 }
 
+void LV2PluginList::fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug) {
+
+    LilvNode* lv2_AudioPort = (lilv_new_uri(world, LV2_CORE__AudioPort));
+    LilvNode* lv2_InputPort = (lilv_new_uri(world, LV2_CORE__InputPort));
+    LilvNode* lv2_OutputPort = (lilv_new_uri(world, LV2_CORE__OutputPort));
+    LilvNode* lv2_EventPort = (lilv_new_uri(world, LILV_URI_EVENT_PORT));
+    LilvNode* lv2_MidiPort = (lilv_new_uri(world, LILV_URI_MIDI_EVENT));
+    LilvNode* lv2_AtomPort = lilv_new_uri(world, LV2_ATOM__AtomPort);
+    LilvNode* lv2_atom_supports = lilv_new_uri(world, LV2_ATOM__supports);
+    
+    unsigned int num_ports = lilv_plugin_get_num_ports(plug);
+    unsigned int n_in = 0;
+    unsigned int n_out = 0;
+    unsigned int n_midi_in = 0;
+    unsigned int n_midi_out = 0;
+    for (unsigned int n = 0; n < num_ports; n++) {
+        const LilvPort* port = lilv_plugin_get_port_by_index(plug, n);
+        if (lilv_port_is_a(plug, port, lv2_AudioPort)) {
+            if (lilv_port_is_a(plug, port, lv2_InputPort)) {
+                n_in += 1;
+            } else {
+                n_out += 1;
+            }
+        } else if (lilv_port_is_a(plug, port, lv2_AtomPort)) {
+            LilvNodes* atom_supports = lilv_port_get_value(
+              plug, port, lv2_atom_supports);
+            if (lilv_nodes_contains(atom_supports, lv2_MidiPort)) {
+                if (lilv_port_is_a(plug, port, lv2_InputPort)) {
+                    n_midi_in += 1;
+                }
+                if (lilv_port_is_a(plug, port, lv2_OutputPort)) {
+                    n_midi_out += 1;
+                }
+            }
+        }
+    }
+    if(n_in !=0) {
+        (*tip) += "\nAudio Inputs: " ;
+        (*tip) += to_string(n_in);
+    }
+    if(n_out !=0) {
+        (*tip) += "\nAudio Outputs: " ;
+        (*tip) += to_string(n_out);
+    }
+    if(n_midi_in !=0) {
+        (*tip) += "\nMidi Inputs: " ;
+        (*tip) += to_string(n_midi_in);
+    }
+    if(n_midi_out !=0) {
+        (*tip) += "\nMidi Outputs: " ;
+        (*tip) += to_string(n_midi_out);
+    }
+    lilv_node_free(lv2_AudioPort);
+    lilv_node_free(lv2_InputPort);
+    lilv_node_free(lv2_OutputPort);
+    lilv_node_free(lv2_EventPort);
+    lilv_node_free(lv2_MidiPort);
+    lilv_node_free(lv2_AtomPort);
+    lilv_node_free(lv2_atom_supports);
+
+}
+
 void LV2PluginList::on_fav_button() {
     Glib::ustring name;
     Glib::ustring tip;
@@ -522,6 +584,7 @@ void LV2PluginList::on_fav_button() {
                 tip += tipby + lilv_node_as_string(nd);
             }
             lilv_node_free(nd);
+            fill_tooltip(&tip, plug);
             row[pinfo.col_tip] = tip;
         } 
     }
@@ -539,14 +602,6 @@ void LV2PluginList::fill_list() {
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
     LilvNode* nd = NULL;
-
-    LilvNode* lv2_AudioPort = (lilv_new_uri(world, LV2_CORE__AudioPort));
-    LilvNode* lv2_InputPort = (lilv_new_uri(world, LV2_CORE__InputPort));
-    LilvNode* lv2_OutputPort = (lilv_new_uri(world, LV2_CORE__OutputPort));
-    LilvNode* lv2_EventPort = (lilv_new_uri(world, LILV_URI_EVENT_PORT));
-    LilvNode* lv2_MidiPort = (lilv_new_uri(world, LILV_URI_MIDI_EVENT));
-    LilvNode* lv2_AtomPort = lilv_new_uri(world, LV2_ATOM__AtomPort);
-    LilvNode* lv2_atom_supports = lilv_new_uri(world, LV2_ATOM__supports);
 
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
       !lilv_plugins_is_end(lv2_plugins, it);
@@ -579,58 +634,10 @@ void LV2PluginList::fill_list() {
         if (nd) {
             tip += tipby + lilv_node_as_string(nd);
         }
-        unsigned int num_ports = lilv_plugin_get_num_ports(plug);
-        unsigned int n_in = 0;
-        unsigned int n_out = 0;
-        unsigned int n_midi_in = 0;
-        unsigned int n_midi_out = 0;
-        for (unsigned int n = 0; n < num_ports; n++) {
-            const LilvPort* port = lilv_plugin_get_port_by_index(plug, n);
-            if (lilv_port_is_a(plug, port, lv2_AudioPort)) {
-                if (lilv_port_is_a(plug, port, lv2_InputPort)) {
-                    n_in += 1;
-                } else {
-                    n_out += 1;
-                }
-            } else if (lilv_port_is_a(plug, port, lv2_AtomPort)) {
-                LilvNodes* atom_supports = lilv_port_get_value(
-                  plug, port, lv2_atom_supports);
-                    if (lilv_nodes_contains(atom_supports, lv2_MidiPort)) {
-                        if (lilv_port_is_a(plug, port, lv2_InputPort)) {
-                            n_midi_in += 1;
-                        }
-                        if (lilv_port_is_a(plug, port, lv2_OutputPort)) {
-                            n_midi_out += 1;
-                        }
-                    }
-                }
-            }
-            if(n_in !=0) {
-                tip += "\nAudio Inputs: " ;
-                tip += to_string(n_in);
-            }
-            if(n_out !=0) {
-                tip += "\nAudio Outputs: " ;
-                tip += to_string(n_out);
-            }
-            if(n_midi_in !=0) {
-                tip += "\nMidi Inputs: " ;
-                tip += to_string(n_midi_in);
-            }
-            if(n_midi_out !=0) {
-                tip += "\nMidi Outputs: " ;
-                tip += to_string(n_midi_out);
-            }
         lilv_node_free(nd);
+        fill_tooltip(&tip, plug);
         row[pinfo.col_tip] = tip;
     }
-    lilv_node_free(lv2_AudioPort);
-    lilv_node_free(lv2_InputPort);
-    lilv_node_free(lv2_OutputPort);
-    lilv_node_free(lv2_EventPort);
-    lilv_node_free(lv2_MidiPort);
-    lilv_node_free(lv2_AtomPort);
-    lilv_node_free(lv2_atom_supports);
     tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
     tool_tip += to_string(invalid_plugs)+" invalid plugins found";
     tool_tip += invalid;
@@ -645,14 +652,6 @@ void LV2PluginList::refill_list() {
     Glib::ustring tip1;
     Glib::ustring tipby = " \nby ";
     LilvNode* nd;
-
-    LilvNode* lv2_AudioPort = (lilv_new_uri(world, LV2_CORE__AudioPort));
-    LilvNode* lv2_InputPort = (lilv_new_uri(world, LV2_CORE__InputPort));
-    LilvNode* lv2_OutputPort = (lilv_new_uri(world, LV2_CORE__OutputPort));
-    LilvNode* lv2_EventPort = (lilv_new_uri(world, LILV_URI_EVENT_PORT));
-    LilvNode* lv2_MidiPort = (lilv_new_uri(world, LILV_URI_MIDI_EVENT));
-    LilvNode* lv2_AtomPort = lilv_new_uri(world, LV2_ATOM__AtomPort);
-    LilvNode* lv2_atom_supports = lilv_new_uri(world, LV2_ATOM__supports);
 
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
       !lilv_plugins_is_end(lv2_plugins, it);
@@ -686,59 +685,11 @@ void LV2PluginList::refill_list() {
                 tip += tipby + lilv_node_as_string(nd);
             }
 
-            unsigned int num_ports = lilv_plugin_get_num_ports(plug);
-            unsigned int n_in = 0;
-            unsigned int n_out = 0;
-            unsigned int n_midi_in = 0;
-            unsigned int n_midi_out = 0;
-            for (unsigned int n = 0; n < num_ports; n++) {
-                const LilvPort* port = lilv_plugin_get_port_by_index(plug, n);
-                if (lilv_port_is_a(plug, port, lv2_AudioPort)) {
-                    if (lilv_port_is_a(plug, port, lv2_InputPort)) {
-                        n_in += 1;
-                    } else {
-                        n_out += 1;
-                    }
-                } else if (lilv_port_is_a(plug, port, lv2_AtomPort)) {
-                    LilvNodes* atom_supports = lilv_port_get_value(
-                      plug, port, lv2_atom_supports);
-                    if (lilv_nodes_contains(atom_supports, lv2_MidiPort)) {
-                        if (lilv_port_is_a(plug, port, lv2_InputPort)) {
-                            n_midi_in += 1;
-                        }
-                        if (lilv_port_is_a(plug, port, lv2_OutputPort)) {
-                            n_midi_out += 1;
-                        }
-                    }
-                }
-            }
-            if(n_in !=0) {
-                tip += "\nAudio Inputs: " ;
-                tip += to_string(n_in);
-            }
-            if(n_out !=0) {
-                tip += "\nAudio Outputs: " ;
-                tip += to_string(n_out);
-            }
-            if(n_midi_in !=0) {
-                tip += "\nMidi Inputs: " ;
-                tip += to_string(n_midi_in);
-            }
-            if(n_midi_out !=0) {
-                tip += "\nMidi Outputs: " ;
-                tip += to_string(n_midi_out);
-            }
             lilv_node_free(nd);
+            fill_tooltip(&tip, plug);
             row[pinfo.col_tip] = tip;
         }
     }
-    lilv_node_free(lv2_AudioPort);
-    lilv_node_free(lv2_InputPort);
-    lilv_node_free(lv2_OutputPort);
-    lilv_node_free(lv2_EventPort);
-    lilv_node_free(lv2_MidiPort);
-    lilv_node_free(lv2_AtomPort);
-    lilv_node_free(lv2_atom_supports);
 }
 
 void LV2PluginList::new_list() {

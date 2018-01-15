@@ -250,6 +250,8 @@ class LV2PluginList : public Gtk::Window {
     void save_fav_list();
     Glib::ustring config_file;
 
+    inline void fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug);
+
     virtual void on_combo_changed();
     virtual void on_entry_changed();
     virtual void on_fav_button();
