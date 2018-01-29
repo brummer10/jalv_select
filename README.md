@@ -3,7 +3,7 @@ jalv.select
 
 ![Puplic Domain](http://freedomdefined.org/upload/2/20/Pd-button.png)
 
-A little gtkmm GUI to select [lv2](http://lv2plug.in/) plugs from a list
+A little gtkmm GUI to select [lv2](http://lv2plug.in/) plugins from a list
 and run them with [jalv](https://drobilla.net/software/jalv/).
 
 ![jalvselect](https://github.com/brummer10/jalv_select/raw/master/jalv.select.png)

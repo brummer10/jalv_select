@@ -509,8 +509,8 @@ void LV2PluginList::fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug) {
                 if (lilv_port_is_a(plug, port, lv2_OutputPort)) {
                     n_midi_out += 1;
                 }
-            lilv_nodes_free(atom_supports);
             }
+            lilv_nodes_free(atom_supports);
         }
     }
     if(n_in !=0) {
