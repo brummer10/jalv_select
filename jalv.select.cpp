@@ -362,7 +362,12 @@ LV2PluginList::LV2PluginList() :
     buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
     add(topBox);
 
-    set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
+    if (access(PIXMAPS_DIR "/lv2_16.png", 0) == -1) {
+        fprintf(stderr, " file %s not found, please install jalv.select propper! \n", PIXMAPS_DIR "/lv2_16.png");
+    } else {
+        set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
+    }
+
     menuQuit.set_label("Quit");
     MenuPopup.append(menuQuit);
     status_icon = Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png");
