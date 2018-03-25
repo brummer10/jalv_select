@@ -11,7 +11,7 @@ That will generate your language .po file in the ./po directory. Now open it wit
 When done, save your work and run:  
 `make`  
 to generate the .mo file.  
-In order to use your new translation, you only need to run:  
+In order to use your new translation, you only need to run (as root):  
 `make install`
 
 You could as well generate .po files for other then your locale language, by running:  
