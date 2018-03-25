@@ -1,4 +1,8 @@
 	
+	# set name
+	NAME = jalv.select
+	VER = 1.0
+
     #@defines
 	PREFIX ?= /usr
 	BIN_DIR ?= $(PREFIX)/bin
@@ -6,14 +10,12 @@
 	DESKAPPS_DIR ?= $(SHARE_DIR)/applications
 	PIXMAPS_DIR ?= $(SHARE_DIR)/pixmaps
 	MAN_DIR ?= $(SHARE_DIR)/man/man1
+	LOCAL_DIR ?= $(SHARE_DIR)/locale
 
-	# set name
-	NAME = jalv.select
-	VER = 1.0
 	# create debian package
 	DEBNAME = jalvselect_$(VER)
 	CREATEDEB = dh_make -y -s -n -e $(USER)@org -p $(DEBNAME) -c gpl >/dev/null
-	DIRS = $(BIN_DIR)  $(DESKAPPS_DIR)  $(PIXMAPS_DIR)  $(MAN_DIR)
+	DIRS = $(BIN_DIR)  $(DESKAPPS_DIR)  $(PIXMAPS_DIR)  $(MAN_DIR)  $(PO_DIR)
 	BUILDDEB = dpkg-buildpackage -rfakeroot -b 2>/dev/null | grep dpkg-deb 
 	# set compile flags
 	CXXFLAGS += -std=c++11 `pkg-config gtkmm-2.4 lilv-0 --cflags` 
@@ -30,12 +32,14 @@
 
 .PHONY : all clean dist-clean install resources tar deb uninstall 
 
-all : check
+all : gettext check
 
 config.h : 
 ifneq ($(CONFIG_H), $(PIXMAPS_DIR))
 	@echo '#define VERSION  "$(VER)"' > config.h 
 	@echo '#define PIXMAPS_DIR  "$(PIXMAPS_DIR)"' >> config.h 
+	@echo '#define LOCAL_DIR  "$(LOCAL_DIR)"' >> config.h 
+	@echo '#define GETTEXT_PACKAGE  "$(NAME)"' >> config.h 
 endif
 
 check : $(NAME)
@@ -49,6 +53,7 @@ clean :
 	@echo ". ." $(BLUE)", clean"$(NONE)
 
 dist-clean :
+	@rm -rf ./locale
 	@rm -rf ./debian
 	@rm -f $(NAME)
 	@rm -f config.h
@@ -65,14 +70,32 @@ install : all
 	cp lv2_16.png $(DESTDIR)$(PIXMAPS_DIR)
 	cp jalv.select.1 $(DESTDIR)$(MAN_DIR)
 	cp jalv.select.fr.1 $(DESTDIR)$(MAN_DIR)
-	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.1
-	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
+	cp --parents $(MSGOBJS)  $(DESTDIR)$(SHARE_DIR)
+	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.1
+	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
 	@echo ". ." $(BLUE)", done"$(NONE)
 
 resources : resource.xml
 	@echo $(LGREEN)"generate resource file,"$(NONE)
 	-@glib-compile-resources --target=resources.c --generate-source resource.xml
 	-@glib-compile-resources --target=resources.h --generate-header resource.xml
+
+    #@localisation
+MSGLANGS=$(notdir $(wildcard po/*po))
+MSGOBJS=$(addprefix locale/,$(MSGLANGS:.po=/LC_MESSAGES/jalv.select.mo))
+
+gettext: $(MSGOBJS)
+
+locale/%/LC_MESSAGES/jalv.select.mo: po/%.po
+	mkdir -p $(dir $@)
+	msgfmt -c -o $@ po/$*.po
+
+updatepot:
+	xgettext --keyword=_ --language=C++ --add-comments --sort-output --package-name=$(NAME) --package-version=$(VER) -o po/jalv.select.pot jalv.select.cpp
+	for POFILE in $(MSGLANGS) ; do msgmerge --update po/$$POFILE po/jalv.select.pot ; done
+
+po:
+	msginit --input=po/jalv.select.pot --locale=$(LANG) --output=po/$(LANG).po
 
     #@create tar ball
 tar : clean
@@ -92,7 +115,7 @@ deb :
      echo -e $(RED)"sorry, build fail"$(NONE); fi
 
 uninstall :
-	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png $(MAN_DIR)/jalv.select.1.gz $(MAN_DIR)/jalv.select.fr.1.gz
+	rm -rf $(BIN_DIR)/$(NAME) $(DESKAPPS_DIR)/$(NAME).desktop $(PIXMAPS_DIR)/lv2.png $(PIXMAPS_DIR)/lv2_16.png $(MAN_DIR)/jalv.select.1.gz $(MAN_DIR)/jalv.select.fr.1.gz $(addprefix $(SHARE_DIR)/, $(MSGOBJS))
 	@echo ". ." $(BLUE)", done"$(NONE)
 
 $(NAME) : config.h $(OBJECTS) $(NAME).h

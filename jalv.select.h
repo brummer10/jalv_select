@@ -40,6 +40,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <libintl.h>
+#include <locale.h>
+
 #include <lilv/lilv.h>
 #include "lv2/lv2plug.in/ns/ext/presets/presets.h"
 #include "lv2/lv2plug.in/ns/ext/state/state.h"
@@ -47,6 +50,8 @@
 #include "lv2/lv2plug.in/ns/ext/atom/atom.h"
 
 #include "config.h"
+
+#define _(S) gettext(S)
 
 namespace jalv_select {
 

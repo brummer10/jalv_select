@@ -1,0 +1,128 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the jalv.select package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jalv.select 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-25 13:30+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: jalv.select.cpp:520
+msgid ""
+"\n"
+"Audio Inputs: "
+msgstr ""
+
+#: jalv.select.cpp:524
+msgid ""
+"\n"
+"Audio Outputs: "
+msgstr ""
+
+#: jalv.select.cpp:528
+msgid ""
+"\n"
+"Midi Inputs: "
+msgstr ""
+
+#: jalv.select.cpp:532
+msgid ""
+"\n"
+"Midi Outputs: "
+msgstr ""
+
+#: jalv.select.cpp:549 jalv.select.cpp:603 jalv.select.cpp:656
+msgid ""
+" \n"
+"by "
+msgstr ""
+
+#: jalv.select.cpp:594
+msgid " _All "
+msgstr ""
+
+#: jalv.select.cpp:645
+msgid " invalid plugins found"
+msgstr ""
+
+#: jalv.select.cpp:644
+msgid " valid plugins installed\n"
+msgstr ""
+
+#: jalv.select.cpp:177
+msgid "Default"
+msgstr ""
+
+#: jalv.select.cpp:333
+msgid "Favorite"
+msgstr ""
+
+#: jalv.select.cpp:322
+msgid "LV2 plugs"
+msgstr ""
+
+#: jalv.select.cpp:332
+msgid "Name"
+msgstr ""
+
+#: jalv.select.cpp:218
+#, c-format
+msgid "Preset <%s> has no rdfs:label\n"
+msgstr ""
+
+#: jalv.select.cpp:368
+msgid "Quit"
+msgstr ""
+
+#: jalv.select.cpp:255
+#, c-format
+msgid ""
+"X Error:  %s\n"
+" Global HotKey disabled\n"
+msgstr ""
+
+#: jalv.select.cpp:246
+#, c-format
+msgid "X Error: try ControlMask | ShiftMask now \n"
+msgstr ""
+
+#: jalv.select.cpp:312 jalv.select.cpp:595
+msgid "_Fav."
+msgstr ""
+
+#: jalv.select.cpp:310
+msgid "_Quit"
+msgstr ""
+
+#: jalv.select.cpp:311
+msgid "_Refresh"
+msgstr ""
+
+#: jalv.select.cpp:887
+#, c-format
+msgid ""
+"jalv.select * Unknown Message\n"
+" %2s\n"
+msgstr ""
+
+#: jalv.select.cpp:59
+msgid "print version string and exit"
+msgstr ""
+
+#: jalv.select.cpp:50
+msgid "start minimized in systray"
+msgstr ""
+
+#: jalv.select.cpp:54
+msgid "start with given high in pixel"
+msgstr ""

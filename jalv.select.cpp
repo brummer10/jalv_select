@@ -47,16 +47,16 @@ Options::Options() :
     w_high(0) {
         opt_hide.set_short_name('s');
         opt_hide.set_long_name("systray");
-        opt_hide.set_description("start minimized in systray");
+        opt_hide.set_description(_("start minimized in systray"));
 
         opt_size.set_short_name('H');
         opt_size.set_long_name("high");
-        opt_size.set_description("start with given high in pixel");
+        opt_size.set_description(_("start with given high in pixel"));
         opt_size.set_arg_description("HIGH");
 
         opt_version.set_short_name('v');
         opt_version.set_long_name("version");
-        opt_version.set_description("print version string and exit");
+        opt_version.set_description(_("print version string and exit"));
 
         o_group.add_entry(opt_hide, hidden);
         o_group.add_entry(opt_size, w_high);
@@ -174,7 +174,7 @@ void PresetList::create_preset_menu(Glib::ustring id, LilvWorld* world) {
     presetMenu->signal_key_release_event().connect_notify(
           sigc::bind(sigc::mem_fun(
           *this, &PresetList::on_preset_key),presetMenu));
-    item = Gtk::manage(new Gtk::MenuItem("Default", true));
+    item = Gtk::manage(new Gtk::MenuItem(_("Default"), true));
     item->signal_activate().connect_notify(
           sigc::bind(sigc::bind(sigc::mem_fun(
           *this, &PresetList::on_preset_default),id),presetMenu));
@@ -215,7 +215,7 @@ void PresetList::create_preset_list(Glib::ustring id, const LilvPlugin* plug, Li
             row[psets.col_plug] = plug;
             lilv_nodes_free(labels);
         } else {
-            fprintf(stderr, "Preset <%s> has no rdfs:label\n",
+            fprintf(stderr, _("Preset <%s> has no rdfs:label\n"),
                     lilv_node_as_string(lilv_nodes_get(presets, i)));
         }
     }
@@ -243,7 +243,7 @@ int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e) {
     static int32_t count = 0;
     KeyGrabber *kg = KeyGrabber::get_instance();
     if (!count) {
-        fprintf(stderr, "X Error: try ControlMask | ShiftMask now \n");
+        fprintf(stderr, _("X Error: try ControlMask | ShiftMask now \n"));
         XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
         kg->modifiers = ControlMask | ShiftMask;
         XGrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy),
@@ -252,7 +252,7 @@ int32_t KeyGrabber::my_XErrorHandler(Display * d, XErrorEvent * e) {
     } else {
         char buffer1[1024];
         XGetErrorText(d, e->error_code, buffer1, 1024);
-        fprintf(stderr, "X Error:  %s\n Global HotKey disabled\n", buffer1);
+        fprintf(stderr, _("X Error:  %s\n Global HotKey disabled\n"), buffer1);
         XUngrabKey(kg->dpy, kg->keycode, kg->modifiers, DefaultRootWindow(kg->dpy));
         XFlush(kg->dpy);
         XCloseDisplay(kg->dpy);
@@ -307,9 +307,9 @@ void KeyGrabber::start_keygrab_thread() {
 ///*** ----------- Class LV2PluginList functions ----------- ***///
 
 LV2PluginList::LV2PluginList() :
-    buttonQuit("_Quit", true),
-    newList("_Refresh", true),
-    fav("_Fav.", true),
+    buttonQuit(_("_Quit"), true),
+    newList(_("_Refresh"), true),
+    fav(_("_Fav."), true),
     textEntry(true),
     mainwin_x(-1),
     mainwin_y(-1),
@@ -319,7 +319,7 @@ LV2PluginList::LV2PluginList() :
     fav_changed(false),
     config_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.conf")),
     new_world(false) {
-    set_title("LV2 plugs");
+    set_title(_("LV2 plugs"));
     set_default_size(350,200);
     get_interpreter();
     fc = FiFoChannel::get_instance();
@@ -329,8 +329,8 @@ LV2PluginList::LV2PluginList() :
 
     listStore = Gtk::ListStore::create(pinfo);
     treeView.set_model(listStore);
-    treeView.append_column("Name", pinfo.col_name);
-    treeView.append_column_editable("Favorite", pinfo.col_fav);
+    treeView.append_column(_("Name"), pinfo.col_name);
+    treeView.append_column_editable(_("Favorite"), pinfo.col_fav);
     treeView.get_column(0)->set_min_width(360);
     treeView.get_column(1)->set_max_width(60);
     treeView.get_column(0)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
@@ -365,7 +365,7 @@ LV2PluginList::LV2PluginList() :
     add(topBox);
 
     set_icon(Glib::wrap(gdk_pixbuf_new_from_resource("/jalv_select/lv2_16.png", NULL)));
-    menuQuit.set_label("Quit");
+    menuQuit.set_label(_("Quit"));
     MenuPopup.append(menuQuit);
     status_icon = Gtk::StatusIcon::create(Glib::wrap(
       gdk_pixbuf_new_from_resource("/jalv_select/lv2.png", NULL)));
@@ -517,19 +517,19 @@ void LV2PluginList::fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug) {
         }
     }
     if(n_in !=0) {
-        (*tip) += "\nAudio Inputs: " ;
+        (*tip) += _("\nAudio Inputs: ") ;
         (*tip) += to_string(n_in);
     }
     if(n_out !=0) {
-        (*tip) += "\nAudio Outputs: " ;
+        (*tip) += _("\nAudio Outputs: ") ;
         (*tip) += to_string(n_out);
     }
     if(n_midi_in !=0) {
-        (*tip) += "\nMidi Inputs: " ;
+        (*tip) += _("\nMidi Inputs: ") ;
         (*tip) += to_string(n_midi_in);
     }
     if(n_midi_out !=0) {
-        (*tip) += "\nMidi Outputs: " ;
+        (*tip) += _("\nMidi Outputs: ") ;
         (*tip) += to_string(n_midi_out);
     }
     lilv_node_free(lv2_AudioPort);
@@ -546,7 +546,7 @@ void LV2PluginList::on_fav_button() {
     Glib::ustring tip;
     Glib::ustring id;
     bool found = false;
-    Glib::ustring tipby = " \nby ";
+    Glib::ustring tipby = _(" \nby ");
     LilvNode* nd;
     listStore->clear();
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
@@ -591,8 +591,8 @@ void LV2PluginList::on_fav_button() {
             row[pinfo.col_tip] = tip;
         } 
     }
-    if (fav.get_active()) fav.set_label(" _All ");
-    else fav.set_label("_Fav.");
+    if (fav.get_active()) fav.set_label(_(" _All "));
+    else fav.set_label(_("_Fav."));
 }
 
 void LV2PluginList::fill_list() {
@@ -600,7 +600,7 @@ void LV2PluginList::fill_list() {
     invalid_plugs = 0;
     Glib::ustring invalid = "";
     Glib::ustring tip;
-    Glib::ustring tipby = " \nby ";
+    Glib::ustring tipby = _(" \nby ");
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
@@ -641,8 +641,8 @@ void LV2PluginList::fill_list() {
         fill_tooltip(&tip, plug);
         row[pinfo.col_tip] = tip;
     }
-    tool_tip = to_string(valid_plugs)+" valid plugins installed\n";
-    tool_tip += to_string(invalid_plugs)+" invalid plugins found";
+    tool_tip = to_string(valid_plugs)+_(" valid plugins installed\n");
+    tool_tip += to_string(invalid_plugs)+_(" invalid plugins found");
     tool_tip += invalid;
     if (status_icon) status_icon->set_tooltip_text(tool_tip);
     if (fav.get_active()) on_fav_button();
@@ -653,7 +653,7 @@ void LV2PluginList::refill_list() {
     Glib::ustring name_search;
     Glib::ustring tip;
     Glib::ustring tip1;
-    Glib::ustring tipby = " \nby ";
+    Glib::ustring tipby = _(" \nby ");
     LilvNode* nd;
 
     for (LilvIter* it = lilv_plugins_begin(lv2_plugins);
@@ -884,7 +884,7 @@ bool FiFoChannel::read_fifo(Glib::IOCondition io_condition)
             fc->runner->come_up();
             fc->is_mine = true;
         } else {
-            fprintf(stderr,"jalv.select * Unknown Message\n %2s\n", buf.c_str()) ;
+            fprintf(stderr,_("jalv.select * Unknown Message\n %2s\n"), buf.c_str()) ;
         }
     }
     return true;
@@ -942,6 +942,11 @@ static void null_handler(const char *log_domain, GLogLevelFlags log_level,
 ///*** ----------- main ----------- ***///
 
 int32_t main (int32_t argc , char ** argv) {
+
+    bindtextdomain(GETTEXT_PACKAGE, LOCAL_DIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
+
     Gtk::Main kit (argc, argv);
     jalv_select::LV2PluginList lv2plugs;
 
