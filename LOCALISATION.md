@@ -19,4 +19,4 @@ You could as well generate .po files for other then your locale language, by run
 were lang is one of the outputs from  
 `locale -a`  
 
-### If you wish to contribute your localisation upstream, please open a issue on the github tracker.
+### If you wish to contribute your localisation upstream, please open a issue on the github tracker, or open a pull request.
