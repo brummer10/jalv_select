@@ -24,6 +24,8 @@
  */
 
 #include "jalv.select.h"
+#include "resources.h"
+
 
 namespace jalv_select {
 
@@ -362,15 +364,11 @@ LV2PluginList::LV2PluginList() :
     buttonBox.pack_start(buttonQuit,Gtk::PACK_SHRINK);
     add(topBox);
 
-    if (access(PIXMAPS_DIR "/lv2_16.png", 0) == -1) {
-        fprintf(stderr, " file %s not found, please install jalv.select propper! \n", PIXMAPS_DIR "/lv2_16.png");
-    } else {
-        set_icon_from_file(PIXMAPS_DIR "/lv2_16.png");
-    }
-
+    set_icon(Glib::wrap(gdk_pixbuf_new_from_resource("/jalv_select/lv2_16.png", NULL)));
     menuQuit.set_label("Quit");
     MenuPopup.append(menuQuit);
-    status_icon = Gtk::StatusIcon::create_from_file(PIXMAPS_DIR "/lv2.png");
+    status_icon = Gtk::StatusIcon::create(Glib::wrap(
+      gdk_pixbuf_new_from_resource("/jalv_select/lv2.png", NULL)));
     status_icon->set_tooltip_text(tool_tip);
 
     selection = treeView.get_selection();

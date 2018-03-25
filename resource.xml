@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+    <gresource prefix="/jalv_select">
+        <file>lv2.png</file>
+        <file>lv2_16.png</file>
+    </gresource>
+</gresources>

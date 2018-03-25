@@ -19,15 +19,16 @@
 	CXXFLAGS += -std=c++11 `pkg-config gtkmm-2.4 lilv-0 --cflags` 
 	LDFLAGS +=  -lX11 `pkg-config gtkmm-2.4 lilv-0 --libs` 
 	# invoke build files
-	OBJECTS = $(NAME).cpp 
+	OBJECTS = $(NAME).cpp resources.c
 	## output style (bash colours)
 	BLUE = "\033[1;34m"
+	LGREEN = "\033[1;32m"
 	RED =  "\033[1;31m"
 	NONE = "\033[0m"
 	## check if config.h is valid
 	CONFIG_H := $(shell cat config.h 2>/dev/null | grep PIXMAPS_DIR | grep -oP '[^"]*"\K[^"]*')
 
-.PHONY : all clean dist-clean install tar deb uninstall 
+.PHONY : all clean dist-clean install resources tar deb uninstall 
 
 all : check
 
@@ -67,6 +68,11 @@ install : all
 	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.1
 	gzip $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
 	@echo ". ." $(BLUE)", done"$(NONE)
+
+resources : resource.xml
+	@echo $(LGREEN)"generate resource file,"$(NONE)
+	-@glib-compile-resources --target=resources.c --generate-source resource.xml
+	-@glib-compile-resources --target=resources.h --generate-header resource.xml
 
     #@create tar ball
 tar : clean
