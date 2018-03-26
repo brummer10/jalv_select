@@ -21,6 +21,13 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
     - left mouse click on systray to show or hide app
     - right mouse click to show quit menu item
 
+## Usage
+
+- select jalv interpreter from combo box (Gtk, Gtk3, Qt, ...)
+- select LV2 plugin from list (click on name or press `space`)
+- select plugin configuration to load (click or press `space`)
+    - jalv should start and run the selected plugin
+
 ## Command-line options
 
 ### start-up
