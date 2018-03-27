@@ -1,0 +1,143 @@
+# French translations for jalv.select package
+# French translation for jalv.select.
+# Copyright (C) 2018 THE jalv.select'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the jalv.select package.
+# Olivier Humbert <trebmuh@tuxfamily.org>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: jalv.select 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-03-25 13:30+0200\n"
+"PO-Revision-Date: 2018-03-25 15:11+0200\n"
+"Last-Translator: Olivier Humbert <trebmuh@tuxfamily.org>\n"
+"Language-Team: French <>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: jalv.select.cpp:520
+msgid ""
+"\n"
+"Audio Inputs: "
+msgstr ""
+"\n"
+"Entrées audio : "
+
+#: jalv.select.cpp:524
+msgid ""
+"\n"
+"Audio Outputs: "
+msgstr ""
+"\n"
+"Sorties audio : "
+
+#: jalv.select.cpp:528
+msgid ""
+"\n"
+"Midi Inputs: "
+msgstr ""
+"\n"
+"Entrées MIDI : "
+
+#: jalv.select.cpp:532
+msgid ""
+"\n"
+"Midi Outputs: "
+msgstr ""
+"\n"
+"Sorties MIDI : "
+
+#: jalv.select.cpp:549 jalv.select.cpp:603 jalv.select.cpp:656
+msgid ""
+" \n"
+"by "
+msgstr ""
+" \n"
+"par "
+
+#: jalv.select.cpp:594
+msgid " _All "
+msgstr " _Tous "
+
+#: jalv.select.cpp:645
+msgid " invalid plugins found"
+msgstr " greffons invalides installés"
+
+#: jalv.select.cpp:644
+msgid " valid plugins installed\n"
+msgstr " greffons valides installés"
+
+#: jalv.select.cpp:177
+msgid "Default"
+msgstr "Défaut"
+
+#: jalv.select.cpp:333
+msgid "Favorite"
+msgstr "Favoris"
+
+#: jalv.select.cpp:322
+msgid "LV2 plugs"
+msgstr "Greffons LV2"
+
+#: jalv.select.cpp:332
+msgid "Name"
+msgstr "Greffons disponibles"
+
+#: jalv.select.cpp:218
+#, c-format
+msgid "Preset <%s> has no rdfs:label\n"
+msgstr "Le préréglage <%s> n&apos; de rdfs:label\n"
+
+#: jalv.select.cpp:368
+msgid "Quit"
+msgstr "Quitter"
+
+#: jalv.select.cpp:255
+#, c-format
+msgid ""
+"X Error:  %s\n"
+" Global HotKey disabled\n"
+msgstr ""
+"Erreur X :  %s\n"
+" Raccourci-clavier global désactivé\n"
+
+#: jalv.select.cpp:246
+#, c-format
+msgid "X Error: try ControlMask | ShiftMask now \n"
+msgstr "Erreur X : essayez ControlMask | ShiftMask maintenant \n"
+
+#: jalv.select.cpp:312 jalv.select.cpp:595
+msgid "_Fav."
+msgstr "_Fav."
+
+#: jalv.select.cpp:310
+msgid "_Quit"
+msgstr "_Quitter"
+
+#: jalv.select.cpp:311
+msgid "_Refresh"
+msgstr "_Rafraîchir"
+
+#: jalv.select.cpp:887
+#, c-format
+msgid ""
+"jalv.select * Unknown Message\n"
+" %2s\n"
+msgstr ""
+"jalv.select * Message inconnu\n"
+" %2s\n"
+
+#: jalv.select.cpp:59
+msgid "print version string and exit"
+msgstr "affiche la version et quitte"
+
+#: jalv.select.cpp:50
+msgid "start minimized in systray"
+msgstr "démarrer minimisé dans la zone de notification"
+
+#: jalv.select.cpp:54
+msgid "start with given high in pixel"
+msgstr "démarrer avec la hauteur donnée en pixels"
