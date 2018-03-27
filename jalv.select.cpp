@@ -943,7 +943,7 @@ static void null_handler(const char *log_domain, GLogLevelFlags log_level,
 
 int32_t main (int32_t argc , char ** argv) {
 
-    bindtextdomain(GETTEXT_PACKAGE, LOCAL_DIR);
+    //bindtextdomain(GETTEXT_PACKAGE, LOCAL_DIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);
 
