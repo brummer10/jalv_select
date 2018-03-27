@@ -48,7 +48,7 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
 
 ## Keyboard shortcuts
 
-  |   Command       |     |   Action                      |
+|   Command       |     |   Action                      |
     |-----------------|:---:|-------------------------------|
     |ALT+q or CTRL+q  |==   |quit                           |
     |ALT+r or CTRL+r  |==   |refresh plugin list            |
