@@ -49,15 +49,15 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
 ## Keyboard shortcuts
 
 |   Command       |     |   Action                      |
-    |-----------------|:---:|-------------------------------|
-    |ALT+q or CTRL+q  |==   |quit                           |
-    |ALT+r or CTRL+r  |==   |refresh plugin list            |
-    |ESCAPE           |==   |deselect preset menu           |
-    |CTRL+c or RMB    |==   |copy plugin URI to clipboard   |
-    |CTRL+w           |==   |hide (minimize to systray icon)|
-    |ENTER or SPACE   |==   |select                         |
-    |UP, DOWN         |==   |select plugin in list          |
-    |PG_UP, PG_DOWN   |==   |scroll plugin list             |
+|-----------------|:---:|-------------------------------|
+|ALT+q or CTRL+q  |==   |quit                           |
+|ALT+r or CTRL+r  |==   |refresh plugin list            |
+|ESCAPE           |==   |deselect preset menu           |
+|CTRL+c or RMB    |==   |copy plugin URI to clipboard   |
+|CTRL+w           |==   |hide (minimize to systray icon)|
+|ENTER or SPACE   |==   |select                         |
+|UP, DOWN         |==   |select plugin in list          |
+|PG_UP, PG_DOWN   |==   |scroll plugin list             |
 
 ## Install
 
