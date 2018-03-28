@@ -68,7 +68,7 @@ msgstr " greffons invalides installés"
 
 #: jalv.select.cpp:644
 msgid " valid plugins installed\n"
-msgstr " greffons valides installés"
+msgstr " greffons valides installés\n"
 
 #: jalv.select.cpp:177
 msgid "Default"
