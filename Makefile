@@ -95,7 +95,7 @@ updatepot:
 	for POFILE in $(MSGLANGS) ; do msgmerge --update po/$$POFILE po/jalv.select.pot ; done
 
 po:
-	msginit --input=po/jalv.select.pot --locale=$(LANG) --output=po/$(LANG).po
+	msginit --input=po/jalv.select.pot --locale=$(LANG) --output=po/$(basename $(LANG)).po
 
     #@create tar ball
 tar : clean
