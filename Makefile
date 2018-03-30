@@ -30,7 +30,7 @@
 	## check if config.h is valid
 	CONFIG_H := $(shell cat config.h 2>/dev/null | grep PIXMAPS_DIR | grep -oP '[^"]*"\K[^"]*')
 
-.PHONY : all clean dist-clean install resources tar deb uninstall 
+.PHONY : all clean dist-clean install resources tar deb uninstall po
 
 all : gettext check
 
