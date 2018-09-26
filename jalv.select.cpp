@@ -347,8 +347,8 @@ LV2PluginList::LV2PluginList() :
     fill_class_list();
     Gtk::RC::parse_string(
         "style 'treestyle'{ \n"
-           " GtkTreeView::odd-row-color = 'gray94' \n"
-           " GtkTreeView::even-row-color = 'gray100' \n"
+           " GtkTreeView::odd-row-color = @base_color \n"
+           " GtkTreeView::even-row-color = shade (0.90, @base_color) \n"
            " GtkTreeView::allow-rules = 1 \n"
        " } \n"
        " widget '*lv2_treeview*' style 'treestyle' \n");
