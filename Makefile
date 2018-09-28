@@ -30,11 +30,6 @@
 	## check if config.h is valid
 	CONFIG_H := $(shell cat config.h 2>/dev/null | grep PIXMAPS_DIR | grep -oP '[^"]*"\K[^"]*')
 
-	COPYTREE_SHARE= ${SH} -c '(${FIND} -d $$0 $$2 | ${CPIO} -dumpl $$1 >/dev/null \ 		2>&1) && \
-                ${CHOWN} -R ${SHAREOWN}:${SHAREGRP} $$1 && \
-                ${FIND} $$1/ -type d -exec ${CHMOD} 755 {} \; && \
-                ${FIND} $$1/ -type f -exec ${CHMOD} ${SHAREMODE} {} \;' --
-
 .PHONY : all clean dist-clean install resources tar deb uninstall po
 
 all : gettext check
