@@ -30,6 +30,11 @@
 	## check if config.h is valid
 	CONFIG_H := $(shell cat config.h 2>/dev/null | grep PIXMAPS_DIR | grep -oP '[^"]*"\K[^"]*')
 
+	COPYTREE_SHARE= ${SH} -c '(${FIND} -d $$0 $$2 | ${CPIO} -dumpl $$1 >/dev/null \ 		2>&1) && \
+                ${CHOWN} -R ${SHAREOWN}:${SHAREGRP} $$1 && \
+                ${FIND} $$1/ -type d -exec ${CHMOD} 755 {} \; && \
+                ${FIND} $$1/ -type f -exec ${CHMOD} ${SHAREMODE} {} \;' --
+
 .PHONY : all clean dist-clean install resources tar deb uninstall po
 
 all : gettext check
@@ -70,9 +75,19 @@ install : all
 	cp lv2_16.png $(DESTDIR)$(PIXMAPS_DIR)
 	cp jalv.select.1 $(DESTDIR)$(MAN_DIR)
 	cp jalv.select.fr.1 $(DESTDIR)$(MAN_DIR)
-	cp --parents $(MSGOBJS)  $(DESTDIR)$(SHARE_DIR)
+	#cp --parents $(MSGOBJS)  $(DESTDIR)$(SHARE_DIR)
 	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.1
 	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
+	@if [ ${LANG} -gt 1 ]; then \
+		for lang in $(LANGS) ; \
+		do \
+			mkdir -p $(DESTDIR)$(SHARE_DIR)/$$lang; \
+			cp $$lang/jalv.select.mo $(DESTDIR)$(SHARE_DIR)/$$lang; \
+		done \
+	else \
+			mkdir -p $(DESTDIR)$(SHARE_DIR)/$(LANGS); \
+			cp $(LANGS)/jalv.select.mo $(DESTDIR)$(SHARE_DIR)/$(LANGS); \
+	fi
 	@echo ". ." $(BLUE)", done"$(NONE)
 
 resources : resource.xml
@@ -83,6 +98,8 @@ resources : resource.xml
     #@localisation
 MSGLANGS=$(notdir $(wildcard po/*po))
 MSGOBJS=$(addprefix locale/,$(MSGLANGS:.po=/LC_MESSAGES/jalv.select.mo))
+LANGS=$(addprefix locale/,$(MSGLANGS:.po=/LC_MESSAGES/))
+LANG=$(words  $(MSGLANGS))
 
 gettext: $(MSGOBJS)
 
