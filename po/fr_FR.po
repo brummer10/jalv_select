@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jalv.select 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-25 13:30+0200\n"
+"POT-Creation-Date: 2019-06-06 06:17+0200\n"
 "PO-Revision-Date: 2018-03-27 22:18+0200\n"
 "Last-Translator: Olivier Humbert <trebmuh@tuxfamily.org>\n"
 "Language-Team: French <>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: jalv.select.cpp:520
+#: jalv.select.cpp:598
 msgid ""
 "\n"
 "Audio Inputs: "
@@ -26,7 +26,7 @@ msgstr ""
 "\n"
 "Entrées audio : "
 
-#: jalv.select.cpp:524
+#: jalv.select.cpp:602
 msgid ""
 "\n"
 "Audio Outputs: "
@@ -34,7 +34,7 @@ msgstr ""
 "\n"
 "Sorties audio : "
 
-#: jalv.select.cpp:528
+#: jalv.select.cpp:606
 msgid ""
 "\n"
 "Midi Inputs: "
@@ -42,7 +42,7 @@ msgstr ""
 "\n"
 "Entrées MIDI : "
 
-#: jalv.select.cpp:532
+#: jalv.select.cpp:610
 msgid ""
 "\n"
 "Midi Outputs: "
@@ -50,7 +50,8 @@ msgstr ""
 "\n"
 "Sorties MIDI : "
 
-#: jalv.select.cpp:549 jalv.select.cpp:603 jalv.select.cpp:656
+#: jalv.select.cpp:627 jalv.select.cpp:683 jalv.select.cpp:739
+#: jalv.select.cpp:793
 msgid ""
 " \n"
 "by "
@@ -58,44 +59,57 @@ msgstr ""
 " \n"
 "par "
 
-#: jalv.select.cpp:594
+#: jalv.select.cpp:673 jalv.select.cpp:730
 msgid " _All "
 msgstr " _Tous "
 
-#: jalv.select.cpp:645
+#: jalv.select.cpp:782
 msgid " invalid plugins found"
 msgstr " greffons invalides installés"
 
-#: jalv.select.cpp:644
+#: jalv.select.cpp:781
 msgid " valid plugins installed\n"
 msgstr " greffons valides installés\n"
 
-#: jalv.select.cpp:177
+#: jalv.select.cpp:337
+msgid "Blacklist"
+msgstr ""
+
+#: jalv.select.cpp:375
+msgid "Blacklist plugins"
+msgstr ""
+
+#: jalv.select.cpp:178
 msgid "Default"
 msgstr "Défaut"
 
-#: jalv.select.cpp:333
+#: jalv.select.cpp:336
 msgid "Favorite"
 msgstr "Favoris"
 
-#: jalv.select.cpp:322
+#: jalv.select.cpp:373
+#, fuzzy
+msgid "Favorite plugins"
+msgstr "Favoris"
+
+#: jalv.select.cpp:325
 msgid "LV2 plugs"
 msgstr "Greffons LV2"
 
-#: jalv.select.cpp:332
+#: jalv.select.cpp:335
 msgid "Name"
 msgstr "Greffons disponibles"
 
-#: jalv.select.cpp:218
+#: jalv.select.cpp:219
 #, c-format
 msgid "Preset <%s> has no rdfs:label\n"
 msgstr "Le préréglage <%s> n&apos; de rdfs:label\n"
 
-#: jalv.select.cpp:368
+#: jalv.select.cpp:380
 msgid "Quit"
 msgstr "Quitter"
 
-#: jalv.select.cpp:255
+#: jalv.select.cpp:256
 #, c-format
 msgid ""
 "X Error:  %s\n"
@@ -104,24 +118,28 @@ msgstr ""
 "Erreur X :  %s\n"
 " Raccourci-clavier global désactivé\n"
 
-#: jalv.select.cpp:246
+#: jalv.select.cpp:247
 #, c-format
 msgid "X Error: try ControlMask | ShiftMask now \n"
 msgstr "Erreur X : essayez ControlMask | ShiftMask maintenant \n"
 
-#: jalv.select.cpp:312 jalv.select.cpp:595
+#: jalv.select.cpp:314 jalv.select.cpp:731
+msgid "_BL."
+msgstr ""
+
+#: jalv.select.cpp:313 jalv.select.cpp:674
 msgid "_Fav."
 msgstr "_Fav."
 
-#: jalv.select.cpp:310
+#: jalv.select.cpp:311
 msgid "_Quit"
 msgstr "_Quitter"
 
-#: jalv.select.cpp:311
+#: jalv.select.cpp:312
 msgid "_Refresh"
 msgstr "_Rafraîchir"
 
-#: jalv.select.cpp:887
+#: jalv.select.cpp:1026
 #, c-format
 msgid ""
 "jalv.select * Unknown Message\n"
