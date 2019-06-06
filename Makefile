@@ -73,7 +73,7 @@ install : all
 	#cp --parents $(MSGOBJS)  $(DESTDIR)$(SHARE_DIR)
 	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.1
 	gzip -f $(DESTDIR)$(MAN_DIR)/jalv.select.fr.1
-	@if [ ${LANG} -gt 1 ]; then \
+	@if [ ${LANGW} -gt 1 ]; then \
 		for lang in $(LANGS) ; \
 		do \
 			mkdir -p $(DESTDIR)$(SHARE_DIR)/$$lang; \
@@ -94,7 +94,7 @@ resources : resource.xml
 MSGLANGS=$(notdir $(wildcard po/*po))
 MSGOBJS=$(addprefix locale/,$(MSGLANGS:.po=/LC_MESSAGES/jalv.select.mo))
 LANGS=$(addprefix locale/,$(MSGLANGS:.po=/LC_MESSAGES/))
-LANG=$(words  $(MSGLANGS))
+LANGW=$(words  $(MSGLANGS))
 
 gettext: $(MSGOBJS)
 

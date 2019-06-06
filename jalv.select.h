@@ -191,6 +191,7 @@ class LV2PluginList : public Gtk::Window {
             add(col_tip);
             add(col_plug);
             add(col_fav);
+            add(col_bl);
         }
         ~PlugInfo() {}
    
@@ -199,17 +200,20 @@ class LV2PluginList : public Gtk::Window {
         Gtk::TreeModelColumn<Glib::ustring> col_tip;
         Gtk::TreeModelColumn<const LilvPlugin*> col_plug;
         Gtk::TreeModelColumn<bool> col_fav;
+        Gtk::TreeModelColumn<bool> col_bl;
     };
     PlugInfo pinfo;
 
     std::vector<Glib::ustring> cats;
     std::vector<Glib::ustring> favs;
+    std::vector<Glib::ustring> bls;
     Gtk::VBox topBox;
     Gtk::HBox buttonBox;
     Gtk::ComboBoxText comboBox;
     Gtk::ScrolledWindow scrollWindow;
     Gtk::Button buttonQuit;
     Gtk::ToggleButton fav;
+    Gtk::ToggleButton bl;
     Gtk::Button newList;
     Gtk::ComboBoxText textEntry;
     Gtk::TreeView treeView;
@@ -255,12 +259,19 @@ class LV2PluginList : public Gtk::Window {
     bool fav_changed;
     void save_fav_list();
     Glib::ustring config_file;
+    void on_bl_toggle(Glib::ustring path);
+    void read_bl_list();
+    bool is_bl(Glib::ustring id);
+    bool bl_changed;
+    void save_bl_list();
+    Glib::ustring backlist_file;
 
     inline void fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug);
 
     virtual void on_combo_changed();
     virtual void on_entry_changed();
     virtual void on_fav_button();
+    virtual void on_bl_button();
     virtual void on_button_quit();
 
 public:
