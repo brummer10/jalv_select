@@ -444,7 +444,6 @@ void LV2PluginList::read_fav_list() {
     file = Gio::File::create_for_path(config_file);
     if (!file->query_exists()) {
         file = Gio::File::create_for_path(sys_config_file);
-        fav_changed = true;
     }
     if (!file->query_exists()) return;
     Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
@@ -508,7 +507,6 @@ void LV2PluginList::read_bl_list() {
     file = Gio::File::create_for_path(backlist_file);
     if (!file->query_exists()) {
         file = Gio::File::create_for_path(sys_backlist_file);
-        bl_changed = true;
     }
     if (!file->query_exists()) return;
     Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
