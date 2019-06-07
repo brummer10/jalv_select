@@ -224,6 +224,8 @@ class LV2PluginList : public Gtk::Window {
     int32_t mainwin_y;
     int32_t valid_plugs;
     int32_t invalid_plugs;
+    sigc::connection fav_c;
+    sigc::connection bl_c;
 
     PresetList pstore;
     GtkIconFactory *factory;
