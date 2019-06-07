@@ -1,15 +1,15 @@
 # French translations for jalv.select package
 # French translation for jalv.select.
-# Copyright (C) 2018 THE jalv.select'S COPYRIGHT HOLDER
+# Copyright (C) 2018-2019 THE jalv.select'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the jalv.select package.
-# Olivier Humbert <trebmuh@tuxfamily.org>, 2018.
+# Olivier Humbert <trebmuh@tuxfamily.org>, 2018-2019.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: jalv.select 1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-06-06 06:17+0200\n"
-"PO-Revision-Date: 2018-03-27 22:18+0200\n"
+"PO-Revision-Date: 2019-06-06 22:38+0200\n"
 "Last-Translator: Olivier Humbert <trebmuh@tuxfamily.org>\n"
 "Language-Team: French <>\n"
 "Language: fr\n"
@@ -73,11 +73,11 @@ msgstr " greffons valides installés\n"
 
 #: jalv.select.cpp:337
 msgid "Blacklist"
-msgstr ""
+msgstr "Liste noire"
 
 #: jalv.select.cpp:375
 msgid "Blacklist plugins"
-msgstr ""
+msgstr "Greffons en liste noire"
 
 #: jalv.select.cpp:178
 msgid "Default"
@@ -88,9 +88,8 @@ msgid "Favorite"
 msgstr "Favoris"
 
 #: jalv.select.cpp:373
-#, fuzzy
 msgid "Favorite plugins"
-msgstr "Favoris"
+msgstr "Greffons favoris"
 
 #: jalv.select.cpp:325
 msgid "LV2 plugs"
@@ -125,7 +124,7 @@ msgstr "Erreur X : essayez ControlMask | ShiftMask maintenant \n"
 
 #: jalv.select.cpp:314 jalv.select.cpp:731
 msgid "_BL."
-msgstr ""
+msgstr "_LN."
 
 #: jalv.select.cpp:313 jalv.select.cpp:674
 msgid "_Fav."
