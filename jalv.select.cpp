@@ -320,7 +320,9 @@ LV2PluginList::LV2PluginList() :
     tool_tip(" "),
     fav_changed(false),
     config_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.conf")),
+    sys_config_file(Glib::build_filename("/etc/xdg/jalvselect", "jalv.select.conf")),
     backlist_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.back")),
+    sys_backlist_file(Glib::build_filename("/etc/xdg/jalvselect", "jalv.select.back")),
     new_world(false) {
     set_title(_("LV2 plugs"));
     set_default_size(350,200);
@@ -335,7 +337,7 @@ LV2PluginList::LV2PluginList() :
     treeView.append_column(_("Name"), pinfo.col_name);
     treeView.append_column_editable(_("Favorite"), pinfo.col_fav);
     treeView.append_column_editable(_("Blacklist"), pinfo.col_bl);
-    treeView.get_column(0)->set_min_width(360);
+    treeView.get_column(0)->set_min_width(300);
     treeView.get_column(1)->set_max_width(80);
     treeView.get_column(2)->set_max_width(80);
   //  treeView.get_column(0)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
@@ -412,6 +414,8 @@ LV2PluginList::LV2PluginList() :
     menuQuit.signal_activate().connect(
       sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
     show_all();
+   // Gtk::TreeViewColumn& c = *(treeView.get_column(2));
+   // treeView.remove_column(c);
     take_focus();
 }
 
@@ -437,6 +441,7 @@ void LV2PluginList::get_interpreter() {
 
 void LV2PluginList::read_fav_list() {
     Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_file);
+    if (!file) Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(sys_config_file);
     if (!file) return;
     if (file->query_exists()) {
         Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
@@ -498,6 +503,7 @@ void LV2PluginList::on_fav_toggle(Glib::ustring path) {
 
 void LV2PluginList::read_bl_list() {
     Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(backlist_file);
+    if (!file) Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(sys_backlist_file);
     if (!file) return;
     if (file->query_exists()) {
         Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    

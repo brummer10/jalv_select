@@ -259,12 +259,14 @@ class LV2PluginList : public Gtk::Window {
     bool fav_changed;
     void save_fav_list();
     Glib::ustring config_file;
+    Glib::ustring sys_config_file;
     void on_bl_toggle(Glib::ustring path);
     void read_bl_list();
     bool is_bl(Glib::ustring id);
     bool bl_changed;
     void save_bl_list();
     Glib::ustring backlist_file;
+    Glib::ustring sys_backlist_file;
 
     inline void fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug);
 
