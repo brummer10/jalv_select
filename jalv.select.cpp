@@ -440,17 +440,19 @@ void LV2PluginList::get_interpreter() {
 }
 
 void LV2PluginList::read_fav_list() {
-    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_file);
-    if (!file) Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(sys_config_file);
-    if (!file) return;
-    if (file->query_exists()) {
-        Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
-        std::string line;
-        while (in->read_line(line)) {
-            favs.push_back(line);
-        }
-        in->close();
+    Glib::RefPtr<Gio::File> file;
+    file = Gio::File::create_for_path(config_file);
+    if (!file->query_exists()) {
+        file = Gio::File::create_for_path(sys_config_file);
+        fav_changed = true;
     }
+    if (!file->query_exists()) return;
+    Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
+    std::string line;
+    while (in->read_line(line)) {
+        favs.push_back(line);
+    }
+    in->close();
 }
 
 void LV2PluginList::save_fav_list() {
@@ -502,17 +504,19 @@ void LV2PluginList::on_fav_toggle(Glib::ustring path) {
 
 
 void LV2PluginList::read_bl_list() {
-    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(backlist_file);
-    if (!file) Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(sys_backlist_file);
-    if (!file) return;
-    if (file->query_exists()) {
-        Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
-        std::string line;
-        while (in->read_line(line)) {
-            bls.push_back(line);
-        }
-        in->close();
+    Glib::RefPtr<Gio::File> file;
+    file = Gio::File::create_for_path(backlist_file);
+    if (!file->query_exists()) {
+        file = Gio::File::create_for_path(sys_backlist_file);
+        bl_changed = true;
     }
+    if (!file->query_exists()) return;
+    Glib::RefPtr<Gio::DataInputStream> in = Gio::DataInputStream::create(file->read());    
+    std::string line;
+    while (in->read_line(line)) {
+        bls.push_back(line);
+    }
+    in->close();
 }
 
 void LV2PluginList::save_bl_list() {
