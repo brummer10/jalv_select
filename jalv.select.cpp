@@ -687,10 +687,12 @@ void LV2PluginList::on_fav_button() {
     }
     if (fav.get_active()) {
         fav.set_label(_(" _All "));
-        bl_c.block(true);
-        bl.set_active(false);
-        bl.set_label(_("_BL."));
-        bl_c.unblock();
+        if (bl.get_active()) {
+            bl_c.block(true);
+            bl.set_active(false);
+            bl.set_label(_("_BL."));
+            bl_c.unblock();
+        }
     } else {
         fav.set_label(_("_Fav."));
     }
@@ -752,10 +754,12 @@ void LV2PluginList::on_bl_button() {
     }
     if (bl.get_active()) {
         bl.set_label(_(" _All "));
-        fav_c.block(true);
-        fav.set_active(false);
-        fav.set_label(_("_Fav."));
-        fav_c.unblock();
+        if (fav.get_active()) {
+            fav_c.block(true);
+            fav.set_active(false);
+            fav.set_label(_("_Fav."));
+            fav_c.unblock();
+        }
     } else {
         bl.set_label(_("_BL."));
     }
