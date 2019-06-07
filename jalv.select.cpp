@@ -646,6 +646,12 @@ void LV2PluginList::on_fav_button() {
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             id = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            if (name.size() > 25) {
+                size_t rem = name.find(" - ");
+                if(rem != Glib::ustring::npos) {
+                    name.erase(rem);
+                }
+            }
         } else {
            continue;
         }
@@ -702,6 +708,12 @@ void LV2PluginList::on_bl_button() {
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             id = lilv_node_as_string(lilv_plugin_get_uri(plug));
+            if (name.size() > 25) {
+                size_t rem = name.find(" - ");
+                if(rem != Glib::ustring::npos) {
+                    name.erase(rem);
+                }
+            }
         } else {
            continue;
         }
