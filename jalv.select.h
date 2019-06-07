@@ -269,6 +269,7 @@ class LV2PluginList : public Gtk::Window {
     Glib::ustring sys_backlist_file;
 
     inline void fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug);
+    inline void truncate_name(Glib::ustring *name);
 
     virtual void on_combo_changed();
     virtual void on_entry_changed();

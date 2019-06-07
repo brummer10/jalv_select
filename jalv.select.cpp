@@ -562,6 +562,14 @@ void LV2PluginList::on_bl_toggle(Glib::ustring path) {
     if (bl.get_active()) on_bl_button();
 }
 
+void LV2PluginList::truncate_name(Glib::ustring *name) {
+    if (name->size() > 25) {
+        size_t rem = name->find(" - ");
+        if(rem != Glib::ustring::npos) {
+            name->erase(rem);
+        }
+    }    
+}
 
 void LV2PluginList::fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug) {
 
@@ -646,12 +654,7 @@ void LV2PluginList::on_fav_button() {
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             id = lilv_node_as_string(lilv_plugin_get_uri(plug));
-            if (name.size() > 25) {
-                size_t rem = name.find(" - ");
-                if(rem != Glib::ustring::npos) {
-                    name.erase(rem);
-                }
-            }
+            truncate_name(&name);
         } else {
            continue;
         }
@@ -708,12 +711,7 @@ void LV2PluginList::on_bl_button() {
             const LilvPluginClass* cls = lilv_plugin_get_class(plug);
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             id = lilv_node_as_string(lilv_plugin_get_uri(plug));
-            if (name.size() > 25) {
-                size_t rem = name.find(" - ");
-                if(rem != Glib::ustring::npos) {
-                    name.erase(rem);
-                }
-            }
+            truncate_name(&name);
         } else {
            continue;
         }
@@ -769,12 +767,7 @@ void LV2PluginList::fill_list() {
             nd = lilv_plugin_get_name(plug);
             if (nd) {
                 name = lilv_node_as_string(nd);
-                if (name.size() > 25) {
-                    size_t rem = name.find(" - ");
-                    if(rem != Glib::ustring::npos) {
-                        name.erase(rem);
-                    }
-                }
+                truncate_name(&name);
             }
         }
         if (nd && !is_bl(lilv_node_as_string(lilv_plugin_get_uri(plug)))) {
@@ -835,12 +828,7 @@ void LV2PluginList::refill_list() {
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             tip1 = lilv_node_as_string(lilv_plugin_get_uri(plug));
             name_search = name+tip+tip1;
-            if (name.size() > 25) {
-                size_t rem = name.find(" - ");
-                if(rem != Glib::ustring::npos) {
-                    name.erase(rem);
-                }
-            }
+            truncate_name(&name);
         } else {
             continue;
         }
