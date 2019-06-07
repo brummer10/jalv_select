@@ -743,6 +743,7 @@ void LV2PluginList::fill_list() {
     Glib::ustring invalid = "";
     Glib::ustring tip;
     Glib::ustring tipby = _(" \nby ");
+    Glib::ustring name;
     world = lilv_world_new();
     lilv_world_load_all(world);
     lv2_plugins = lilv_world_get_all_plugins(world);        
@@ -754,10 +755,20 @@ void LV2PluginList::fill_list() {
         const LilvPlugin* plug = lilv_plugins_get(lv2_plugins, it);
         if (plug) {
             nd = lilv_plugin_get_name(plug);
+            if (nd) {
+                name = lilv_node_as_string(nd);
+                if (name.size() > 25) {
+                    size_t rem = name.find(" - ");
+                    if(rem != Glib::ustring::npos) {
+                        name.erase(rem);
+                    }
+                }
+            }
         }
         if (nd && !is_bl(lilv_node_as_string(lilv_plugin_get_uri(plug)))) {
             row = *(listStore->append());
-            row[pinfo.col_name] = lilv_node_as_string(nd);
+            if (!name.empty()) row[pinfo.col_name] = name;
+            else row[pinfo.col_name] = lilv_node_as_string(nd);
             row[pinfo.col_plug] = plug;
             row[pinfo.col_id] = lilv_node_as_string(lilv_plugin_get_uri(plug));
             row[pinfo.col_fav] = is_fav(lilv_node_as_string(lilv_plugin_get_uri(plug)));
@@ -812,6 +823,12 @@ void LV2PluginList::refill_list() {
             tip = lilv_node_as_string(lilv_plugin_class_get_label(cls));
             tip1 = lilv_node_as_string(lilv_plugin_get_uri(plug));
             name_search = name+tip+tip1;
+            if (name.size() > 25) {
+                size_t rem = name.find(" - ");
+                if(rem != Glib::ustring::npos) {
+                    name.erase(rem);
+                }
+            }
         } else {
             continue;
         }
