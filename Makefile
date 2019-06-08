@@ -1,7 +1,7 @@
 	
 	# set name
 	NAME = jalv.select
-	VER = 1.2
+	VER = 1.3
 
     #@defines
 	PREFIX ?= /usr

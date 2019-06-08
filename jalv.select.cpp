@@ -68,7 +68,7 @@ Options::~Options() {}
 
 void Options::show_version_and_exit(LV2PluginList *p) {
     fprintf(stderr, "jalv.select version \033[1;32m %s \n \033[0m" 
-      "    Public Domain @ 2016 by Hermman Meyer\n", VERSION );
+      "    Public Domain @ 2019 by Hermman Meyer\n", VERSION );
     p->hide();
     Glib::signal_idle().connect_once(
       sigc::ptr_fun ( Gtk::Main::quit));
@@ -321,6 +321,7 @@ LV2PluginList::LV2PluginList() :
     fav_changed(false),
     config_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.conf")),
     sys_config_file(Glib::build_filename("/etc/xdg/jalvselect", "jalv.select.conf")),
+    bl_changed(false),
     backlist_file(Glib::build_filename(Glib::get_user_config_dir(), "jalv.select.back")),
     sys_backlist_file(Glib::build_filename("/etc/xdg/jalvselect", "jalv.select.back")),
     new_world(false) {
