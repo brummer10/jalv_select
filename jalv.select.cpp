@@ -129,7 +129,7 @@ int32_t PresetList::write_state_to_file(Glib::ustring state) {
 
 void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk::TreeModel::iterator iter, LilvWorld* world) {
     Gtk::TreeModel::Row row = *iter;
-    LV2_URID_Map       map           = { NULL, map_uri };
+   /* LV2_URID_Map       map           = { NULL, map_uri };
     LV2_URID_Unmap     unmap         = { NULL, unmap_uri };
 
     LilvNode* preset = lilv_new_uri(world, row.get_value(psets.col_uri).c_str());
@@ -140,13 +140,13 @@ void PresetList::on_preset_selected(Gtk::Menu *presetMenu, Glib::ustring id, Gtk
     lilv_node_free(preset);
     lilv_state_free(state);
     st.replace(st.find_first_of("<"),st.find_first_of(">"),"<");
-    if(!write_state_to_file(st)) return;
+    if(!write_state_to_file(st)) return;*/
    
     Gtk::TreeModel::iterator it = selection->get_selected();
     if(iter) selection->unselect(*it);
-    //Glib::ustring pre = row.get_value(psets.col_uri);
-    //Glib::ustring com = interpret + " -p " + pre + id;
-    Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
+    Glib::ustring pre = row.get_value(psets.col_uri);
+    Glib::ustring com = interpret + " -p " + pre + id;
+    //Glib::ustring com = interpret + " -l " + "/tmp/state.ttl" + id;
     //fprintf(stderr,"%s\n",com.c_str());
     if (system(NULL)) system( com.c_str());
     presetStore->clear();
@@ -338,9 +338,9 @@ LV2PluginList::LV2PluginList() :
     treeView.append_column(_("Name"), pinfo.col_name);
     treeView.append_column_editable(_("Favorite"), pinfo.col_fav);
     treeView.append_column_editable(_("Blacklist"), pinfo.col_bl);
-    treeView.get_column(0)->set_min_width(300);
-    treeView.get_column(1)->set_max_width(80);
-    treeView.get_column(2)->set_max_width(80);
+    treeView.get_column(0)->set_min_width(400);
+    treeView.get_column(1)->set_max_width(75);
+    treeView.get_column(2)->set_max_width(60);
   //  treeView.get_column(0)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //  treeView.get_column(1)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
     treeView.get_column(2)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
@@ -417,6 +417,7 @@ LV2PluginList::LV2PluginList() :
     show_all();
    // Gtk::TreeViewColumn& c = *(treeView.get_column(2));
    // treeView.remove_column(c);
+    get_window()->get_root_origin(mainwin_x, mainwin_y);
     take_focus();
 }
 

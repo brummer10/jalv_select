@@ -27,7 +27,12 @@
 #ifndef JALV_SELECT_H_
 #define JALV_SELECT_H_
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <gtkmm.h>
+#pragma GCC diagnostic pop
+
 #include <fcntl.h>
 #include <fstream>
 
