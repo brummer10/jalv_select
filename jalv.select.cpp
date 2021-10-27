@@ -345,9 +345,9 @@ LV2PluginList::LV2PluginList() :
   //  treeView.get_column(1)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
     treeView.get_column(2)->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
     Gtk::CellRendererToggle *cell = dynamic_cast<Gtk::CellRendererToggle*>(
-      treeView.get_column(1)->get_first_cell_renderer());
+      treeView.get_column(1)->get_first_cell());
     Gtk::CellRendererToggle *cellb = dynamic_cast<Gtk::CellRendererToggle*>(
-      treeView.get_column(2)->get_first_cell_renderer());
+      treeView.get_column(2)->get_first_cell());
     treeView.set_tooltip_column(2);
     treeView.set_rules_hint(true);
   //  treeView.set_fixed_height_mode(true);
@@ -357,13 +357,25 @@ LV2PluginList::LV2PluginList() :
     read_bl_list();
     fill_list();
     fill_class_list();
-    Gtk::RC::parse_string(
+
+
+    Glib::ustring data = "treeview { border-bottom-color: rgba(125,125,125,0.5); border-bottom-style: solid; border-bottom-width: 1px;}";
+    auto css = Gtk::CssProvider::create();
+    if(not css->load_from_data(data)) {
+        std::exit(1);
+    }
+    auto screen = Gdk::Screen::get_default();
+    auto ctx = treeView.get_style_context();
+    ctx->add_provider_for_screen(screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    // gtmm-2.4
+    /*Gtk::RC::parse_string(
         "style 'treestyle'{ \n"
            " GtkTreeView::odd-row-color = @base_color \n"
            " GtkTreeView::even-row-color = shade (0.90, @base_color) \n"
            " GtkTreeView::allow-rules = 1 \n"
        " } \n"
-       " widget '*lv2_treeview*' style 'treestyle' \n");
+       " widget '*lv2_treeview*' style 'treestyle' \n");*/
     scrollWindow.add(treeView);
     scrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     scrollWindow.get_vscrollbar()->set_can_focus(true);
@@ -415,8 +427,8 @@ LV2PluginList::LV2PluginList() :
     menuQuit.signal_activate().connect(
       sigc::mem_fun(*this, &LV2PluginList::on_button_quit));
     show_all();
-   // Gtk::TreeViewColumn& c = *(treeView.get_column(2));
-   // treeView.remove_column(c);
+    //Gtk::TreeViewColumn& c = *(treeView.get_column(2));
+    //c.set_visible(false);
     get_window()->get_root_origin(mainwin_x, mainwin_y);
     take_focus();
 }
@@ -437,7 +449,12 @@ void LV2PluginList::get_interpreter() {
                 comboBox.set_active(s);
                 s++;
         }
-    }        
+    }
+    
+    if (!system("which lv2lint > /dev/null 2>&1")) {
+        comboBox.append("lv2lint");
+    }
+    comboBox.append("jalv.gtk -d");
     pstore.interpret = comboBox.get_active_text(); 
 }
 
@@ -891,7 +908,7 @@ void LV2PluginList::fill_class_list() {
     sort(cats.begin(), cats.end());
     cats.erase( unique(cats.begin(), cats.end()), cats.end());
     for (std::vector<Glib::ustring>::iterator it = cats.begin() ; it != cats.end(); ++it)
-        textEntry.append_text(*it);
+        textEntry.append(*it);
 }
 
 void LV2PluginList::on_entry_changed() {

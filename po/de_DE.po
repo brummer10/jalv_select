@@ -1,56 +1,46 @@
 # German translations for jalv.select package
 # German translation for jalv.select.
-# Copyright (C) 2018 THE jalv.select'S COPYRIGHT HOLDER
+# Copyright (C) 2020 THE jalv.select'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the jalv.select package.
-# hermann <brummer-@web.de>, 2018.
-# hermann meyer <brummer-@web.de>, 2018-2019.
+# Hermann Meyer <brummer-@web.de>, 2020.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: jalv.select 1.0\n"
+"Project-Id-Version: jalv.select 1.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-06-06 06:17+0200\n"
-"PO-Revision-Date: 2019-06-06 06:27+0200\n"
-"Last-Translator: hermann meyer <brummer-@web.de>\n"
-"Language-Team: Deutsch <>\n"
+"PO-Revision-Date: 2020-08-31 10:50+0200\n"
+"Last-Translator: Hermann Meyer <brummer-@web.de>\n"
+"Language-Team: German\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Gtranslator 3.30.1\n"
 
 #: jalv.select.cpp:598
 msgid ""
 "\n"
 "Audio Inputs: "
 msgstr ""
-"\n"
-"Audio Eingänge: "
 
 #: jalv.select.cpp:602
 msgid ""
 "\n"
 "Audio Outputs: "
 msgstr ""
-"\n"
-"Audio Ausgänge: "
 
 #: jalv.select.cpp:606
 msgid ""
 "\n"
 "Midi Inputs: "
 msgstr ""
-"\n"
-"Midi Eingänge: "
 
 #: jalv.select.cpp:610
 msgid ""
 "\n"
 "Midi Outputs: "
 msgstr ""
-"\n"
-"Midi Ausgänge: "
 
 #: jalv.select.cpp:627 jalv.select.cpp:683 jalv.select.cpp:739
 #: jalv.select.cpp:793
@@ -58,57 +48,55 @@ msgid ""
 " \n"
 "by "
 msgstr ""
-" \n"
-"von "
 
 #: jalv.select.cpp:673 jalv.select.cpp:730
 msgid " _All "
-msgstr " _Alle "
+msgstr ""
 
 #: jalv.select.cpp:782
 msgid " invalid plugins found"
-msgstr " invalide Plugins gefunden"
+msgstr ""
 
 #: jalv.select.cpp:781
 msgid " valid plugins installed\n"
-msgstr " valide Plugins gefunden\n"
+msgstr ""
 
 #: jalv.select.cpp:337
 msgid "Blacklist"
-msgstr "Blacklist"
+msgstr ""
 
 #: jalv.select.cpp:375
 msgid "Blacklist plugins"
-msgstr "Blacklist Plugins"
+msgstr ""
 
 #: jalv.select.cpp:178
 msgid "Default"
-msgstr "Voreinstellung"
+msgstr ""
 
 #: jalv.select.cpp:336
 msgid "Favorite"
-msgstr "Favoriten"
+msgstr ""
 
 #: jalv.select.cpp:373
 msgid "Favorite plugins"
-msgstr "Favoriten Plugins"
+msgstr ""
 
 #: jalv.select.cpp:325
 msgid "LV2 plugs"
-msgstr "LV2 plugins"
+msgstr ""
 
 #: jalv.select.cpp:335
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
 #: jalv.select.cpp:219
 #, c-format
 msgid "Preset <%s> has no rdfs:label\n"
-msgstr "Preset <%s> hat kein rdfs:label\n"
+msgstr ""
 
 #: jalv.select.cpp:380
 msgid "Quit"
-msgstr "Quit"
+msgstr ""
 
 #: jalv.select.cpp:256
 #, c-format
@@ -116,29 +104,27 @@ msgid ""
 "X Error:  %s\n"
 " Global HotKey disabled\n"
 msgstr ""
-"X Error:  %s\n"
-" Global HotKey abgeschaltet\n"
 
 #: jalv.select.cpp:247
 #, c-format
 msgid "X Error: try ControlMask | ShiftMask now \n"
-msgstr "X Error: versuche nun ControlMask | ShiftMask \n"
+msgstr ""
 
 #: jalv.select.cpp:314 jalv.select.cpp:731
 msgid "_BL."
-msgstr "_Bl."
+msgstr ""
 
 #: jalv.select.cpp:313 jalv.select.cpp:674
 msgid "_Fav."
-msgstr "_Fav."
+msgstr ""
 
 #: jalv.select.cpp:311
 msgid "_Quit"
-msgstr "_Quit"
+msgstr ""
 
 #: jalv.select.cpp:312
 msgid "_Refresh"
-msgstr "E_rneuern"
+msgstr ""
 
 #: jalv.select.cpp:1026
 #, c-format
@@ -146,17 +132,15 @@ msgid ""
 "jalv.select * Unknown Message\n"
 " %2s\n"
 msgstr ""
-"jalv.select * Unbekannte Aussage\n"
-" %2s\n"
 
 #: jalv.select.cpp:59
 msgid "print version string and exit"
-msgstr "drucke Version und beende"
+msgstr ""
 
 #: jalv.select.cpp:50
 msgid "start minimized in systray"
-msgstr "starte minimiert im systray"
+msgstr ""
 
 #: jalv.select.cpp:54
 msgid "start with given high in pixel"
-msgstr "starte mit Höhe in pixel"
+msgstr ""

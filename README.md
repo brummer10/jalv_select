@@ -64,7 +64,7 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
 ### depends
 
 - lilv
-- gtkmm-2.4
+- gtkmm-3.0
 - Xlib
 - gettext
 
