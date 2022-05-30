@@ -308,10 +308,12 @@ void KeyGrabber::start_keygrab_thread() {
 ///*** ----------- Class LV2PluginList functions ----------- ***///
 
 LV2PluginList::LV2PluginList() :
+    la(getenv("LANG")),
     buttonQuit(_("_Quit"), true),
     newList(_("_Refresh"), true),
     fav(_("_Fav."), true),
     bl(_("_BL."), true),
+    lang(la.substr(0,2).c_str(), true),
     textEntry(true),
     mainwin_x(-1),
     mainwin_y(-1),
@@ -383,6 +385,14 @@ LV2PluginList::LV2PluginList() :
     topBox.pack_end(buttonBox,Gtk::PACK_SHRINK);
     buttonBox.pack_start(comboBox,Gtk::PACK_SHRINK);
     buttonBox.pack_start(textEntry,Gtk::PACK_EXPAND_WIDGET);
+
+    Glib::ustring::size_type found = la.find("en");
+    if (found == Glib::ustring::npos) {
+        buttonBox.pack_start(lang,Gtk::PACK_SHRINK);
+        lang.set_tooltip_text(_("Switch to English language for the LV2 interface"));
+        lang_c = lang.signal_toggled().connect(
+          sigc::mem_fun(*this, &LV2PluginList::on_lang_button));
+    }
     buttonBox.pack_start(newList,Gtk::PACK_SHRINK);
     buttonBox.pack_start(fav,Gtk::PACK_SHRINK);
     fav.set_tooltip_text(_("Favorite plugins"));
@@ -590,6 +600,20 @@ void LV2PluginList::truncate_name(Glib::ustring *name) {
             name->erase(rem);
         }
     }    
+}
+
+void LV2PluginList::on_lang_button() {
+    if (lang.get_active()) {
+        setenv("LANG", "en_US.UTF-8", 1);
+        lang.set_label("en");
+        lang.set_tooltip_text(_("Switch to native language for the LV2 interface"));
+        new_list();     
+    } else {
+        setenv("LANG", la.c_str(), 1);
+        lang.set_label(la.substr(0,2).c_str());
+        lang.set_tooltip_text(_("Switch to English language for the LV2 interface"));
+        new_list();
+    }
 }
 
 void LV2PluginList::fill_tooltip(Glib::ustring *tip, const LilvPlugin* plug) {

@@ -209,6 +209,7 @@ class LV2PluginList : public Gtk::Window {
     };
     PlugInfo pinfo;
 
+    Glib::ustring la;
     std::vector<Glib::ustring> cats;
     std::vector<Glib::ustring> favs;
     std::vector<Glib::ustring> bls;
@@ -219,6 +220,7 @@ class LV2PluginList : public Gtk::Window {
     Gtk::Button buttonQuit;
     Gtk::ToggleButton fav;
     Gtk::ToggleButton bl;
+    Gtk::ToggleButton lang;
     Gtk::Button newList;
     Gtk::ComboBoxText textEntry;
     Gtk::TreeView treeView;
@@ -231,6 +233,7 @@ class LV2PluginList : public Gtk::Window {
     int32_t invalid_plugs;
     sigc::connection fav_c;
     sigc::connection bl_c;
+    sigc::connection lang_c;
 
     PresetList pstore;
     GtkIconFactory *factory;
@@ -250,6 +253,7 @@ class LV2PluginList : public Gtk::Window {
     FiFoChannel *fc;
 
     void get_interpreter();
+    void select_lang();
     void fill_list();
     void refill_list();
     void new_list();
@@ -282,6 +286,7 @@ class LV2PluginList : public Gtk::Window {
     virtual void on_entry_changed();
     virtual void on_fav_button();
     virtual void on_bl_button();
+    virtual void on_lang_button();
     virtual void on_button_quit();
 
 public:
