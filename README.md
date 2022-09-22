@@ -67,6 +67,7 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
 - gtkmm-3.0
 - Xlib
 - gettext
+- dh-make
 
  . . . of course, you need [jalv](https://drobilla.net/software/jalv/)
 
