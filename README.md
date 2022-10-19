@@ -72,7 +72,7 @@ and run them with [jalv](https://drobilla.net/software/jalv/).
 
 ### Debian installation
 
-- make deb
+- make deb  --> requir dh-make
 - dpkg-buildpackage -rfakeroot -uc -us -b
 
 ### other platforms

@@ -449,7 +449,7 @@ LV2PluginList::~LV2PluginList() {
 
 void LV2PluginList::get_interpreter() {
     if (system(NULL) )
-      system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' >/tmp/jalv.interpreter" );
+      system("echo $PATH | tr ':' '\n' | xargs ls  | grep jalv | gawk '{if ($0 == \"jalv\") {print \"jalv -s\"} else {print $0}}' | sort -u >/tmp/jalv.interpreter" );
     std::ifstream input( "/tmp/jalv.interpreter" );
     int32_t s = 0;
     for( std::string line; getline( input, line ); ) {
@@ -459,6 +459,10 @@ void LV2PluginList::get_interpreter() {
                 comboBox.set_active(s);
                 s++;
         }
+    }
+
+    if (!system("which carla-single > /dev/null 2>&1")) {
+        comboBox.append("carla-single");
     }
     
     if (!system("which lv2lint > /dev/null 2>&1")) {
